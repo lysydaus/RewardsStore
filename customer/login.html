@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>用户登录 - 振华商城</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script>tailwind.config={theme:{extend:{colors:{"primary":"#a04100","primary-container":"#ff6b00","on-primary":"#ffffff","on-primary-container":"#572000","surface":"#f9f9f9","on-surface":"#1a1c1c","secondary":"#5f5e5e","on-surface-variant":"#5a4136","surface-container-low":"#f3f3f3","surface-container-lowest":"#ffffff","outline-variant":"#e2bfb0","outline":"#8e7164","error":"#ba1a1a"}}}}</script>
+<style>
+  body { font-family:'Work Sans',sans-serif; background:#f9f9f9; min-height:100dvh; }
+  .material-symbols-outlined { font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24; }
+</style>
+</head>
+<body class="flex flex-col min-h-screen">
+
+<!-- 语言切换 -->
+<button id="lang-toggle" onclick="I18N.toggle()"
+  class="fixed top-4 right-4 z-50 w-10 h-10 rounded-full bg-white border border-orange-200 text-primary font-bold text-sm shadow-sm">EN</button>
+
+<!-- 背景装饰 -->
+<div class="fixed inset-0 pointer-events-none overflow-hidden">
+  <div class="absolute -top-24 -right-12 w-96 h-96 rounded-full bg-orange-100 opacity-30 blur-3xl"></div>
+  <div class="absolute -bottom-16 -left-16 w-72 h-72 rounded-full bg-amber-100 opacity-30 blur-3xl"></div>
+</div>
+
+<main class="flex-grow flex items-center justify-center px-4 py-10 relative z-10">
+  <div class="w-full max-w-[420px]">
+
+    <!-- Header -->
+    <div class="text-center mb-8">
+      <a href="../index.html" class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary-container shadow-lg shadow-orange-200 mb-4">
+        <span class="material-symbols-outlined text-white text-3xl" style="font-variation-settings:'FILL' 1,'wght' 600">person</span>
+      </a>
+      <h1 class="text-2xl font-black text-primary" style="font-family:'Plus Jakarta Sans',sans-serif" data-zh="用户登录" data-en="Customer Login">用户登录</h1>
+      <p class="text-secondary text-sm mt-1" data-zh="登录享受购物积分" data-en="Login to earn shopping points">登录享受购物积分</p>
+    </div>
+
+    <!-- 登录/注册切换 -->
+    <div class="flex bg-gray-100 p-1 rounded-xl mb-6">
+      <button onclick="switchMode('login')" id="tab-login" class="flex-1 py-2.5 text-sm font-bold bg-white shadow-sm rounded-lg text-on-surface">
+        <span data-zh="登录" data-en="Login">登录</span>
+      </button>
+      <button onclick="switchMode('register')" id="tab-register" class="flex-1 py-2.5 text-sm font-bold text-secondary rounded-lg">
+        <span data-zh="注册" data-en="Register">注册</span>
+      </button>
+    </div>
+
+    <!-- 登录卡片 -->
+    <div class="bg-white rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.06)] border border-orange-50 p-8">
+      <div id="error-msg" class="hidden mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm flex items-center gap-2">
+        <span class="material-symbols-outlined text-base">error</span>
+        <span id="error-text"></span>
+      </div>
+
+      <!-- 登录表单 -->
+      <form id="login-form" class="space-y-5" onsubmit="doLogin(event)">
+        <!-- 手机号 -->
+        <div class="space-y-1.5">
+          <label class="text-xs font-semibold text-on-surface-variant ml-1" data-zh="手机号" data-en="Phone">手机号</label>
+          <div class="relative group">
+            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors text-xl">phone</span>
+            <input id="login-phone" type="text" value="13800000002"
+              class="w-full bg-surface-container-low border-none rounded-xl py-3.5 pl-10 pr-4 text-sm focus:ring-2 focus:ring-orange-300 transition-all"
+              data-ph-zh="请输入手机号" data-ph-en="Enter phone number" placeholder="请输入手机号"/>
+          </div>
+        </div>
+
+        <!-- 密码 -->
+        <div class="space-y-1.5">
+          <div class="flex justify-between items-center px-1">
+            <label class="text-xs font-semibold text-on-surface-variant" data-zh="密码" data-en="Password">密码</label>
+            <a href="#" class="text-xs font-semibold text-primary hover:opacity-80" data-zh="忘记密码?" data-en="Forgot password?">忘记密码?</a>
+          </div>
+          <div class="relative group">
+            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors text-xl">lock</span>
+            <input id="login-password" type="password" value="user123"
+              class="w-full bg-surface-container-low border-none rounded-xl py-3.5 pl-10 pr-12 text-sm focus:ring-2 focus:ring-orange-300 transition-all"
+              data-ph-zh="请输入密码" data-ph-en="Enter password" placeholder="请输入密码"/>
+            <button type="button" onclick="togglePwd('login-password', 'login-eye')" class="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-secondary transition-colors">
+              <span id="login-eye" class="material-symbols-outlined text-xl">visibility</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 登录按钮 -->
+        <button type="submit"
+          class="w-full bg-primary-container text-white font-bold text-base py-4 rounded-xl shadow-md shadow-orange-200 hover:opacity-90 active:scale-[.98] transition-all">
+          <span data-zh="登 录" data-en="Sign In">登 录</span>
+        </button>
+      </form>
+
+      <!-- 注册表单 -->
+      <form id="register-form" class="hidden space-y-5" onsubmit="doRegister(event)">
+        <!-- 手机号 -->
+        <div class="space-y-1.5">
+          <label class="text-xs font-semibold text-on-surface-variant ml-1" data-zh="手机号" data-en="Phone">手机号</label>
+          <div class="relative group">
+            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors text-xl">phone</span>
+            <input id="reg-phone" type="text"
+              class="w-full bg-surface-container-low border-none rounded-xl py-3.5 pl-10 pr-4 text-sm focus:ring-2 focus:ring-orange-300 transition-all"
+              data-ph-zh="请输入手机号" data-ph-en="Enter phone number" placeholder="请输入手机号"/>
+          </div>
+        </div>
+
+        <!-- 昵称 -->
+        <div class="space-y-1.5">
+          <label class="text-xs font-semibold text-on-surface-variant ml-1" data-zh="昵称" data-en="Nickname">昵称</label>
+          <div class="relative group">
+            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors text-xl">person</span>
+            <input id="reg-nickname" type="text"
+              class="w-full bg-surface-container-low border-none rounded-xl py-3.5 pl-10 pr-4 text-sm focus:ring-2 focus:ring-orange-300 transition-all"
+              data-ph-zh="请输入昵称" data-ph-en="Enter nickname" placeholder="请输入昵称"/>
+          </div>
+        </div>
+
+        <!-- 密码 -->
+        <div class="space-y-1.5">
+          <label class="text-xs font-semibold text-on-surface-variant ml-1" data-zh="设置密码" data-en="Set Password">设置密码</label>
+          <div class="relative group">
+            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors text-xl">lock</span>
+            <input id="reg-password" type="password"
+              class="w-full bg-surface-container-low border-none rounded-xl py-3.5 pl-10 pr-12 text-sm focus:ring-2 focus:ring-orange-300 transition-all"
+              data-ph-zh="请设置密码" data-ph-en="Set password" placeholder="请设置密码"/>
+            <button type="button" onclick="togglePwd('reg-password', 'reg-eye')" class="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-secondary transition-colors">
+              <span id="reg-eye" class="material-symbols-outlined text-xl">visibility</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 注册按钮 -->
+        <button type="submit"
+          class="w-full bg-primary-container text-white font-bold text-base py-4 rounded-xl shadow-md shadow-orange-200 hover:opacity-90 active:scale-[.98] transition-all">
+          <span data-zh="注 册" data-en="Register">注 册</span>
+        </button>
+      </form>
+
+      <!-- 分割线 -->
+      <div class="relative my-6 text-center">
+        <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-orange-100"></div></div>
+        <span class="relative px-3 bg-white text-xs text-secondary uppercase tracking-wider" data-zh="快速体验" data-en="Quick Access">快速体验</span>
+      </div>
+
+      <!-- 游客登录 -->
+      <button onclick="guestLogin()"
+        class="w-full flex items-center justify-center gap-2 py-3 border border-orange-200 rounded-xl text-sm text-on-surface-variant hover:bg-orange-50 transition-colors">
+        <span class="material-symbols-outlined text-xl">person_off</span>
+        <span data-zh="游客模式" data-en="Guest Mode">游客模式</span>
+      </button>
+    </div>
+
+    <!-- 演示提示 -->
+    <div class="mt-4 p-3 bg-orange-50 rounded-xl border border-orange-100 text-xs text-secondary text-center">
+      <span data-zh="演示账号: 13800000002 / user123" data-en="Demo: 13800000002 / user123">演示账号: 13800000002 / user123</span>
+    </div>
+
+    <p class="text-center text-xs text-secondary mt-4 opacity-60">
+      <span data-zh="登录即代表同意" data-en="By signing in you agree to">登录即代表同意</span>
+      <a href="#" class="underline" data-zh="服务协议" data-en="Terms">服务协议</a>
+      <span data-zh="和" data-en="and"> 和 </span>
+      <a href="#" class="underline" data-zh="隐私政策" data-en="Privacy Policy">隐私政策</a>
+    </p>
+  </div>
+</main>
+
+<script src="../db.js"></script>
+<script>
+  DB.init();
+  I18N.applyAll();
+
+  let currentMode = 'login';
+
+  function switchMode(mode) {
+    currentMode = mode;
+    document.getElementById('tab-login').className = mode === 'login' 
+      ? 'flex-1 py-2.5 text-sm font-bold bg-white shadow-sm rounded-lg text-on-surface'
+      : 'flex-1 py-2.5 text-sm font-bold text-secondary rounded-lg';
+    document.getElementById('tab-register').className = mode === 'register'
+      ? 'flex-1 py-2.5 text-sm font-bold bg-white shadow-sm rounded-lg text-on-surface'
+      : 'flex-1 py-2.5 text-sm font-bold text-secondary rounded-lg';
+    
+    if (mode === 'login') {
+      document.getElementById('login-form').classList.remove('hidden');
+      document.getElementById('register-form').classList.add('hidden');
+    } else {
+      document.getElementById('login-form').classList.add('hidden');
+      document.getElementById('register-form').classList.remove('hidden');
+    }
+    hideError();
+  }
+
+  function togglePwd(inputId, eyeId) {
+    const inp = document.getElementById(inputId);
+    const eye = document.getElementById(eyeId);
+    if (inp.type === 'password') { inp.type = 'text'; eye.textContent = 'visibility_off'; }
+    else { inp.type = 'password'; eye.textContent = 'visibility'; }
+  }
+
+  function showError(msg) {
+    const box = document.getElementById('error-msg');
+    document.getElementById('error-text').textContent = msg;
+    box.classList.remove('hidden');
+  }
+
+  function hideError() {
+    document.getElementById('error-msg').classList.add('hidden');
+  }
+
+  function doLogin(e) {
+    e.preventDefault();
+    const phone = document.getElementById('login-phone').value.trim();
+    const pwd = document.getElementById('login-password').value;
+    
+    if (!phone || !pwd) {
+      showError(I18N.lang === 'zh' ? '请填写完整信息' : 'Please fill in all fields');
+      return;
+    }
+    
+    const u = DB.loginUser(phone, pwd);
+    
+    if (u) {
+      window.location.href = 'home.html';
+    } else {
+      showError(I18N.lang === 'zh' ? '手机号或密码错误' : 'Invalid phone or password');
+    }
+  }
+
+  function doRegister(e) {
+    e.preventDefault();
+    const phone = document.getElementById('reg-phone').value.trim();
+    const nickname = document.getElementById('reg-nickname').value.trim();
+    const pwd = document.getElementById('reg-password').value;
+    if (!phone || !pwd) {
+      showError(I18N.lang === 'zh' ? '请填写完整信息' : 'Please fill in all fields');
+      return;
+    }
+    if (!/^1[3-9]\d{9}$/.test(phone)) {
+      showError(I18N.lang === 'zh' ? '请输入正确的手机号' : 'Please enter a valid phone number');
+      return;
+    }
+    const u = DB.registerUser(phone, pwd, nickname);
+    if (u) {
+      window.location.href = 'home.html';
+    } else {
+      showError(I18N.lang === 'zh' ? '该手机号已注册' : 'Phone number already registered');
+    }
+  }
+
+  function guestLogin() {
+    const guestPhone = 'guest_' + Date.now();
+    const u = DB.registerUser(guestPhone, 'guest123', I18N.lang === 'zh' ? '游客用户' : 'Guest User');
+    if (u) window.location.href = 'home.html';
+  }
+</script>
+</body>
+</html>

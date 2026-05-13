@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>店铺详情 - 振华商城</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script>tailwind.config={theme:{extend:{colors:{"primary":"#a04100","primary-container":"#ff6b00","on-primary":"#ffffff","surface":"#f9f9f9","on-surface":"#1a1c1c","secondary":"#5f5e5e"}}}}</script>
+<style>
+  body{font-family:sans-serif;background:#f9f9f9;min-height:100dvh;}
+  .material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;}
+</style>
+</head>
+<body class="bg-surface text-on-surface pb-24">
+
+<header class="sticky top-0 z-50 bg-white shadow-sm flex items-center px-4 h-14">
+  <button onclick="history.back()" class="p-2"><span class="material-symbols-outlined text-primary">arrow_back</span></button>
+  <h1 class="flex-1 text-center font-bold" id="store-name">店铺详情</h1>
+  <button onclick="location.href='cart.html'" class="relative p-1">
+    <span class="material-symbols-outlined text-primary text-2xl" style="font-variation-settings:'FILL' 1,'wght' 500">shopping_cart</span>
+    <span id="cart-badge" class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold">0</span>
+  </button>
+</header>
+
+<main id="store-content" class="pb-4"></main>
+
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-2 py-2 bg-white border-t shadow-lg z-50" id="customer-bottom-nav"></nav>
+
+<script src="../db.js"></script>
+<script src="_nav.js"></script>
+<script>
+DB.init();
+const user = DB.getCurrentUser();
+if (!user) window.location.href = 'login.html';
+
+renderCustomerNav('stores');
+updateCartBadge();
+
+const storeId = parseInt(new URLSearchParams(window.location.search).get('id'));
+const store = DB.findById('stores', storeId);
+let currentFilter = '全部';
+
+if (!store) {
+  document.getElementById('store-content').innerHTML = '<div class="text-center py-20">店铺不存在</div>';
+} else {
+  renderStore();
+}
+
+function renderStore() {
+  document.getElementById('store-name').textContent = store.name_zh;
+  const allProducts = DB.findAll('products').filter(p => p.store_id === storeId && p.status === 'on_sale');
+  
+  // 获取所有子分类
+  const subCategories = ['全部'];
+  allProducts.forEach(p => {
+    if (p.sub_category && !subCategories.includes(p.sub_category)) {
+      subCategories.push(p.sub_category);
+    }
+  });
+  
+  // 根据当前筛选过滤商品
+  const products = currentFilter === '全部' 
+    ? allProducts 
+    : allProducts.filter(p => p.sub_category === currentFilter);
+  
+  let html = '';
+  
+  // 店铺封面卡片
+  html += '<div class="m-4 rounded-2xl overflow-hidden shadow-lg relative">';
+  html += '<img src="' + store.image + '" class="w-full h-40 object-cover"/>';
+  html += '<div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">';
+  html += '<div class="inline-block px-3 py-1 bg-primary/90 text-white text-xs rounded-full mb-2">优质优价</div>';
+  html += '<h2 class="font-bold text-xl text-white">' + store.name_zh + '</h2>';
+  html += '</div></div>';
+  
+  // 店铺信息
+  html += '<div class="px-4 mb-4">';
+  html += '<div class="flex items-center gap-2 text-sm text-secondary mb-2">';
+  html += '<span class="material-symbols-outlined text-lg">location_on</span>';
+  html += '<span>' + store.address + '</span>';
+  html += '</div>';
+  html += '<div class="flex items-center gap-2 text-sm text-secondary">';
+  html += '<span class="material-symbols-outlined text-lg">schedule</span>';
+  html += '<span>营业时间：' + store.open_hours + '</span>';
+  html += '<div class="ml-auto flex items-center gap-1 bg-amber-50 px-3 py-1 rounded-full">';
+  html += '<span class="material-symbols-outlined text-amber-600 text-sm" style="font-variation-settings:\'FILL\' 1">star</span>';
+  html += '<span class="font-bold text-sm">' + store.rating + '</span>';
+  html += '<span class="text-xs text-secondary">(' + store.review_count + ')</span>';
+  html += '</div></div></div>';
+  
+  // 分类标签 - 始终显示
+  html += '<div class="px-4 mb-4"><div class="flex gap-2 overflow-x-auto pb-2" style="-webkit-overflow-scrolling:touch;scrollbar-width:none">';
+  subCategories.forEach(cat => {
+    const isActive = cat === currentFilter;
+    html += '<button onclick="filterByCategory(\'' + cat + '\')" class="px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all ' + 
+            (isActive ? 'bg-primary text-white shadow-md' : 'bg-gray-100 text-secondary') + '">' + cat + '</button>';
+  });
+  html += '</div></div>';
+  
+  // 商品列表 - 卡片式
+  if (products.length === 0) {
+    html += '<div class="text-center py-10 text-secondary">该分类暂无商品</div>';
+  } else {
+    html += '<div class="px-4 space-y-4">';
+    products.forEach(p => {
+      html += '<div class="bg-white rounded-2xl overflow-hidden shadow-md active:scale-98 transition-transform" onclick="location.href=\'product.html?id=' + p.id + '\'">';
+      
+      // 商品图片
+      html += '<div class="relative">';
+      html += '<img src="' + p.image + '" class="w-full h-48 object-cover"/>';
+      
+      // 收藏按钮
+      html += '<button class="absolute top-3 right-3 w-10 h-10 bg-white/90 rounded-full flex items-center justify-center shadow-md active:scale-90 transition-transform" onclick="event.stopPropagation()">';
+      html += '<span class="material-symbols-outlined text-secondary">favorite_border</span>';
+      html += '</button>';
+      html += '</div>';
+      
+      // 商品信息
+      html += '<div class="p-4">';
+      html += '<h3 class="font-bold text-lg mb-1">' + p.name_zh + '</h3>';
+      
+      // 商品描述
+      if (p.description_zh) {
+        const shortDesc = p.description_zh.length > 50 ? p.description_zh.substring(0, 50) + '...' : p.description_zh;
+        html += '<p class="text-sm text-secondary mb-3 line-clamp-2">' + shortDesc + '</p>';
+      }
+      
+      // 积分标签
+      if (p.points_reward > 0) {
+        html += '<div class="inline-block px-2 py-1 bg-amber-50 text-amber-700 text-xs rounded font-semibold mb-3">' + p.points_reward + '积分</div>';
+      }
+      
+      // 价格和按钮
+      html += '<div class="flex items-center justify-between">';
+      html += '<div class="text-primary font-bold text-2xl">¥' + p.price + '</div>';
+      html += '<button class="px-6 py-2 bg-primary-container text-white font-bold rounded-full text-sm shadow-md active:scale-95 transition-transform" onclick="event.stopPropagation();quickAdd(' + p.id + ')">立即购买</button>';
+      html += '</div>';
+      
+      html += '</div></div>';
+    });
+    html += '</div>';
+  }
+  
+  document.getElementById('store-content').innerHTML = html;
+}
+
+window.filterByCategory = function(category) {
+  currentFilter = category;
+  renderStore();
+  // 滚动到商品列表顶部
+  window.scrollTo({top: 300, behavior: 'smooth'});
+};
+
+window.quickAdd = function(productId) {
+  location.href = 'product.html?id=' + productId;
+};
+</script>
+</body>
+</html>

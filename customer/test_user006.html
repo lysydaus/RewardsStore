@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>测试用户006 - 振华商城</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script>tailwind.config={theme:{extend:{colors:{"primary":"#a04100","primary-container":"#ff6b00"}}}}</script>
+<style>
+  body{font-family:'Work Sans',sans-serif;background:#f9f9f9;}
+  .material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;}
+</style>
+</head>
+<body class="bg-surface text-on-surface p-4">
+
+<div class="max-w-2xl mx-auto space-y-4">
+  <div class="bg-white rounded-xl p-6 shadow-sm">
+    <h1 class="font-black text-2xl mb-4">用户006 - 自动递减测试</h1>
+    <p class="text-sm text-secondary mb-4">此页面用于测试用户006的到期时间自动递减功能</p>
+    
+    <div class="bg-blue-50 border-2 border-blue-200 rounded-xl p-4 mb-4">
+      <h3 class="font-bold text-sm mb-2">📅 递减规则</h3>
+      <ul class="text-xs text-secondary space-y-1">
+        <li>• 第1天：T+3（还剩3天）</li>
+        <li>• 第2天：T+2（还剩2天）</li>
+        <li>• 第3天：T+1（还剩1天）</li>
+        <li>• 第4天：T+3（循环回到3天）</li>
+        <li>• 数据库重置：直接重置为T+3</li>
+      </ul>
+    </div>
+    
+    <div class="space-y-3">
+      <button onclick="checkUser006()" class="w-full bg-blue-500 text-white font-bold py-3 rounded-xl">
+        查看用户006当前状态
+      </button>
+      
+      <button onclick="simulateNextDay()" class="w-full bg-orange-500 text-white font-bold py-3 rounded-xl">
+        模拟下一天（手动递减）
+      </button>
+      
+      <button onclick="resetDatabase()" class="w-full bg-red-500 text-white font-bold py-3 rounded-xl">
+        重置数据库（重置为T+3）
+      </button>
+      
+      <button onclick="clearUpdateDate()" class="w-full bg-gray-500 text-white font-bold py-3 rounded-xl">
+        清除今日更新标记
+      </button>
+    </div>
+  </div>
+  
+  <div class="bg-white rounded-xl p-6 shadow-sm">
+    <h2 class="font-bold text-lg mb-3">当前状态</h2>
+    <div id="user-info" class="text-sm space-y-2"></div>
+  </div>
+  
+  <div class="bg-white rounded-xl p-6 shadow-sm">
+    <h2 class="font-bold text-lg mb-3">更新日志</h2>
+    <div id="update-log" class="text-xs space-y-2 max-h-60 overflow-y-auto"></div>
+  </div>
+  
+  <a href="profile.html" class="block text-center text-primary-container font-bold py-3">
+    返回个人中心
+  </a>
+</div>
+
+<script src="../db.js"></script>
+<script>
+  DB.init();
+  
+  let logs = [];
+  
+  function addLog(message) {
+    const timestamp = new Date().toLocaleString();
+    logs.unshift(`[${timestamp}] ${message}`);
+    if (logs.length > 20) logs.pop();
+    updateLogDisplay();
+  }
+  
+  function updateLogDisplay() {
+    const logDiv = document.getElementById('update-log');
+    if (logs.length === 0) {
+      logDiv.innerHTML = '<p class="text-secondary">暂无日志</p>';
+    } else {
+      logDiv.innerHTML = logs.map(log => `<p class="text-secondary">${log}</p>`).join('');
+    }
+  }
+  
+  function checkUser006() {
+    const users = DB._get('users');
+    const user006 = users.find(u => u.phone === '13800000006');
+    
+    if (!user006) {
+      alert('用户006不存在！');
+      return;
+    }
+    
+    const now = new Date();
+    const expireAt = new Date(user006.trial_expire_at);
+    const createdAt = new Date(user006.created_at);
+    const diffMs = expireAt - now;
+    const diffDays = Math.ceil(diffMs / (24 * 60 * 60 * 1000));
+    const diffHours = Math.floor(diffMs / (60 * 60 * 1000));
+    
+    const lastUpdateDate = localStorage.getItem('user006_last_update_date');
+    const today = new Date().toDateString();
+    
+    let html = `
+      <p><strong>昵称：</strong>${user006.nickname}</p>
+      <p><strong>手机：</strong>${user006.phone}</p>
+      <p><strong>会员状态：</strong>${user006.member_status}</p>
+      <p><strong>注册时间：</strong>${createdAt.toLocaleString()}</p>
+      <p><strong>到期时间：</strong>${expireAt.toLocaleString()}</p>
+      <p class="text-lg font-bold text-primary-container mt-2">
+        <strong>剩余时间：</strong>${diffDays}天 (${diffHours}小时)
+      </p>
+      <p class="mt-2"><strong>上次更新日期：</strong>${lastUpdateDate || '未更新'}</p>
+      <p><strong>今天日期：</strong>${today}</p>
+      <p><strong>今天是否已更新：</strong>${lastUpdateDate === today ? '是' : '否'}</p>
+    `;
+    
+    document.getElementById('user-info').innerHTML = html;
+    addLog(`查看用户006状态：还剩${diffDays}天`);
+  }
+  
+  function simulateNextDay() {
+    // 清除今日更新标记，允许再次更新
+    localStorage.removeItem('user006_last_update_date');
+    
+    // 调用更新函数
+    DB.updateUser006TrialTime();
+    
+    addLog('模拟下一天，用户006时间已递减');
+    checkUser006();
+    
+    // 刷新页面以更新走马灯
+    setTimeout(() => {
+      if (confirm('时间已更新！是否刷新页面查看效果？')) {
+        location.reload();
+      }
+    }, 500);
+  }
+  
+  function resetDatabase() {
+    if (confirm('确定要重置数据库吗？所有数据将被清空！')) {
+      DB.reset();
+      addLog('数据库已重置，用户006重置为T+3天');
+      checkUser006();
+      
+      setTimeout(() => {
+        if (confirm('数据库已重置！是否刷新页面？')) {
+          location.reload();
+        }
+      }, 500);
+    }
+  }
+  
+  function clearUpdateDate() {
+    localStorage.removeItem('user006_last_update_date');
+    addLog('已清除今日更新标记，下次访问时会自动更新');
+    checkUser006();
+  }
+  
+  // 页面加载时显示状态
+  checkUser006();
+  addLog('页面加载完成');
+</script>
+</body>
+</html>

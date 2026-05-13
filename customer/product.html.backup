@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>商品详情 - 振华商城</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script>tailwind.config={theme:{extend:{colors:{"primary":"#a04100","primary-container":"#ff6b00","on-primary":"#ffffff","on-primary-container":"#572000","surface":"#f9f9f9","on-surface":"#1a1c1c","secondary":"#5f5e5e","on-surface-variant":"#5a4136","surface-container-low":"#f3f3f3","surface-container-lowest":"#ffffff","outline-variant":"#e2bfb0","tertiary":"#8c5000","error":"#ba1a1a"}}}}</script>
+<style>
+  body{font-family:'Work Sans',sans-serif;background:#f9f9f9;min-height:100dvh;}
+  .material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;}
+  .line-clamp-3{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
+</style>
+</head>
+<body class="bg-surface text-on-surface pb-24">
+
+<header class="sticky top-0 z-50 bg-white/95 backdrop-blur shadow-sm flex justify-between items-center px-4 py-3">
+  <button onclick="history.back()" class="p-1"><span class="material-symbols-outlined text-primary">arrow_back</span></button>
+  <h1 class="flex-1 text-center font-semibold text-on-surface text-sm" data-zh="生活圈商品详情" data-en="Product Detail">生活圈商品详情</h1>
+  <div class="flex items-center gap-1">
+    <button class="p-1"><span class="material-symbols-outlined text-on-surface-variant text-xl">share</span></button>
+    <button class="p-1"><span class="material-symbols-outlined text-on-surface-variant text-xl">more_vert</span></button>
+  </div>
+</header>
+
+<main class="max-w-screen-md mx-auto pb-4">
+  <div id="product-content"></div>
+</main>
+
+<!-- 底部导航 -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-2 py-2 bg-white/95 backdrop-blur border-t border-orange-50 shadow-lg z-50" id="customer-bottom-nav"></nav>
+
+<script src="../db.js"></script>
+<script src="_nav.js"></script>
+<script>
+  try {
+    DB.init();
+    I18N.applyAll();
+    
+    // 检查登录状态
+    const user = DB.getCurrentUser();
+    if (!user) {
+      console.log('用户未登录，重定向到登录页');
+      window.location.href = 'login.html';
+      throw new Error('Not logged in');
+    }
+    
+    console.log('当前用户:', user);
+    
+    renderCustomerNav('stores');
+    updateCartBadge();
+
+    const params = new URLSearchParams(location.search);
+    const productId = parseInt(params.get('id'));
+    
+    console.log('商品ID:', productId);
+    
+    if (!productId || isNaN(productId)) {
+      document.getElementById('product-content').innerHTML = `<div class="text-center py-20 text-secondary">${I18N.t('商品ID无效','Invalid product ID')}<br><small>请从商品列表点击进入</small></div>`;
+      throw new Error('Invalid product ID');
+    }
+    
+    const product = DB.findById('products', productId);
+    console.log('找到的商品:', product);
+    
+    let quantity = 1;
+    let selectedColor = 0;
+    let selectedSize = 0;
+    let selectedDelivery = 'home';
+
+    if (!product) {
+      document.getElementById('product-content').innerHTML = `<div class="text-center py-20 text-secondary">${I18N.t('商品不存在','Product not found')}<br><small>商品ID: ${productId}</small></div>`;
+    } else {
+      const store = DB.findById('stores', product.store_id);
+      const userPoints = user ? user.points : 0;
+      const maxRedeem = Math.min(product.points_redeem || 0, userPoints);
+      
+      // 构建颜色选择HTML
+      let colorHTML = '';
+      if (product.variants && product.variants.colors) {
+        const colorButtons = product.variants.colors.map((color, cidx) => 
+          `<button onclick="selectColor(${cidx})" 
+                  id="color-${cidx}"
+                  class="w-12 h-12 rounded-full border-2 ${cidx === 0 ? 'border-primary-container' : 'border-transparent'} p-0.5 active:scale-90 transition-all">
+            <div class="w-full h-full rounded-full" style="background-color: ${color.value}"></div>
+          </button>`
+        ).join('');
+        
+        colorHTML = `
+          <div class="mt-4 pt-4 border-t border-gray-100">
+            <h4 class="font-semibold text-sm text-on-surface mb-3">${I18N.t('颜色','Color')}</h4>
+            <div class="flex gap-3">${colorButtons}</div>
+          </div>`;
+      }
+      
+      // 构建尺寸选择HTML
+      let sizeHTML = '';
+      if (product.variants && product.variants.sizes) {
+        const sizeButtons = product.variants.sizes.map((size, sidx) =>
+          `<button onclick="selectSize(${sidx})" 
+                  id="size-${sidx}"
+                  class="px-5 py-2 rounded-lg border ${sidx === 0 ? 'bg-primary-container text-white border-primary-container font-bold' : 'border-gray-300 text-on-surface'} text-sm active:scale-95 transition-all">
+            ${size}
+          </button>`
+        ).join('');
+        
+        sizeHTML = `
+          <div class="mt-4">
+            <h4 class="font-semibold text-sm text-on-surface mb-3">${I18N.t('尺寸','Size')}</h4>
+            <div class="flex flex-wrap gap-2">${sizeButtons}</div>
+          </div>`;
+      }
+      
+      // 构建配送方式HTML
+      let deliveryHTML = '';
+      if (product.variants) {
+        deliveryHTML = `
+          <div class="mt-4">
+            <h4 class="font-semibold text-sm text-on-surface mb-3">${I18N.t('配送方式','Delivery Method')}</h4>
+            <div class="grid grid-cols-2 gap-3">
+              <button onclick="selectDelivery('home')" 
+                      id="delivery-home"
+                      class="flex flex-col items-center justify-center p-3 rounded-xl border-2 border-primary-container bg-primary/5 active:scale-95 transition-all">
+                <span class="material-symbols-outlined text-primary mb-1">local_shipping</span>
+                <span class="text-xs font-bold text-primary">${I18N.t('快递到家','Home Delivery')}</span>
+              </button>
+              <button onclick="selectDelivery('pickup')" 
+                      id="delivery-pickup"
+                      class="flex flex-col items-center justify-center p-3 rounded-xl border-2 border-gray-300 active:scale-95 transition-all">
+                <span class="material-symbols-outlined text-secondary mb-1">storefront</span>
+                <span class="text-xs text-secondary">${I18N.t('到店自提','Store Pickup')}</span>
+              </button>
+            </div>
+          </div>`;
+      }
+
+    document.getElementById('product-content').innerHTML = `
+      <!-- Hero Product Image -->
+      <div class="relative w-full aspect-square overflow-hidden">
+        <img src="${product.image||'https://via.placeholder.com/400'}" class="w-full h-full object-cover" alt="${product.name_zh}"/>
+      </div>
+
+      <!-- Product Content -->
+      <div class="px-4 -mt-6 relative z-10">
+        <div class="bg-white rounded-xl p-4 shadow-lg border border-orange-50">
+          <div class="flex justify-between items-start">
+            <div class="flex-1">
+              <span class="inline-block px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-bold mb-2">${I18N.t('精品推荐','Featured')}</span>
+              <h2 class="font-bold text-lg text-on-surface">${I18N.t(product.name_zh, product.name_en || product.name_zh)}</h2>
+            </div>
+            <div class="text-right">
+              <p class="font-black text-2xl text-primary" style="font-family:'Plus Jakarta Sans',sans-serif">¥${product.price}</p>
+            </div>
+          </div>
+
+          ${colorHTML}
+          ${sizeHTML}
+          ${deliveryHTML}
+
+          <!-- Quantity Selector -->
+          <div class="mt-4 ${product.variants ? '' : 'pt-4 border-t border-gray-100'} flex items-center justify-between">
+            <span class="font-semibold text-sm text-on-surface-variant">${I18N.t('数量','Quantity')}</span>
+            <div class="flex items-center bg-surface-container-low rounded-full p-1 border border-outline-variant/30">
+              <button onclick="changeQty(-1)" class="w-8 h-8 flex items-center justify-center text-on-surface-variant active:scale-90 transition-transform">
+                <span class="material-symbols-outlined text-lg">remove</span>
+              </button>
+              <span id="quantity" class="w-10 text-center font-bold text-on-surface">1</span>
+              <button onclick="changeQty(1)" class="w-8 h-8 flex items-center justify-center text-primary active:scale-90 transition-transform">
+                <span class="material-symbols-outlined text-lg">add</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Product Description Section -->
+        <div class="mt-6">
+          <h3 class="font-semibold text-lg mb-3 border-l-4 border-primary pl-3">${I18N.t('商品详情','Product Details')}</h3>
+          <div class="space-y-3 text-on-surface-variant text-sm leading-relaxed">
+            <p>${I18N.t(
+              product.description_zh || '选用优质原料，精心制作，为您带来极致体验。每一份商品都经过严格的质量把控，确保风味的一致性与纯净度。',
+              product.description_en || 'Made with premium ingredients and careful craftsmanship to bring you the ultimate experience.'
+            )}</p>
+            
+            <!-- Detail Cards -->
+            ${store && store.category === 'Coffee' ? `
+              <div class="grid grid-cols-2 gap-3 mt-4">
+                <div class="bg-surface-container-low p-4 rounded-xl border border-surface-variant/20">
+                  <span class="material-symbols-outlined text-primary mb-2 block text-2xl">coffee</span>
+                  <p class="font-bold text-sm text-on-surface">${I18N.t('中浅烘焙','Medium Roast')}</p>
+                  <p class="text-xs text-secondary opacity-70">${I18N.t('保留明亮酸质','Bright acidity')}</p>
+                </div>
+                <div class="bg-surface-container-low p-4 rounded-xl border border-surface-variant/20">
+                  <span class="material-symbols-outlined text-primary mb-2 block text-2xl">thermostat</span>
+                  <p class="font-bold text-sm text-on-surface">${I18N.t('92°C 恒温','92°C Constant')}</p>
+                  <p class="text-xs text-secondary opacity-70">${I18N.t('精准水温萃取','Precise extraction')}</p>
+                </div>
+              </div>
+            ` : store && store.category === 'Bakery' ? `
+              <div class="grid grid-cols-2 gap-3 mt-4">
+                <div class="bg-surface-container-low p-4 rounded-xl border border-surface-variant/20">
+                  <span class="material-symbols-outlined text-primary mb-2 block text-2xl">bakery_dining</span>
+                  <p class="font-bold text-sm text-on-surface">${I18N.t('新鲜出炉','Freshly Baked')}</p>
+                  <p class="text-xs text-secondary opacity-70">${I18N.t('每日现做','Made daily')}</p>
+                </div>
+                <div class="bg-surface-container-low p-4 rounded-xl border border-surface-variant/20">
+                  <span class="material-symbols-outlined text-primary mb-2 block text-2xl">verified</span>
+                  <p class="font-bold text-sm text-on-surface">${I18N.t('优质原料','Premium Ingredients')}</p>
+                  <p class="text-xs text-secondary opacity-70">${I18N.t('精选食材','Selected materials')}</p>
+                </div>
+              </div>
+            ` : store && store.category === 'Electronics' ? `
+              <div class="grid grid-cols-2 gap-3 mt-4">
+                <div class="bg-surface-container-low p-4 rounded-xl border border-surface-variant/20">
+                  <span class="material-symbols-outlined text-primary mb-2 block text-2xl">verified_user</span>
+                  <p class="font-bold text-sm text-on-surface">${I18N.t('正品保证','Authentic')}</p>
+                  <p class="text-xs text-secondary opacity-70">${I18N.t('官方授权','Official')}</p>
+                </div>
+                <div class="bg-surface-container-low p-4 rounded-xl border border-surface-variant/20">
+                  <span class="material-symbols-outlined text-primary mb-2 block text-2xl">support_agent</span>
+                  <p class="font-bold text-sm text-on-surface">${I18N.t('售后保障','Warranty')}</p>
+                  <p class="text-xs text-secondary opacity-70">${I18N.t('一年质保','1-year')}</p>
+                </div>
+              </div>
+            ` : store && store.category === 'Fashion' ? `
+              <div class="grid grid-cols-2 gap-3 mt-4">
+                <div class="bg-surface-container-low p-4 rounded-xl border border-surface-variant/20">
+                  <span class="material-symbols-outlined text-primary mb-2 block text-2xl">local_shipping</span>
+                  <p class="font-bold text-sm text-on-surface">${I18N.t('快速配送','Fast Delivery')}</p>
+                  <p class="text-xs text-secondary opacity-70">${I18N.t('48小时送达','48h delivery')}</p>
+                </div>
+                <div class="bg-surface-container-low p-4 rounded-xl border border-surface-variant/20">
+                  <span class="material-symbols-outlined text-primary mb-2 block text-2xl">autorenew</span>
+                  <p class="font-bold text-sm text-on-surface">${I18N.t('7天退换','7-Day Return')}</p>
+                  <p class="text-xs text-secondary opacity-70">${I18N.t('无忧退换','Easy return')}</p>
+                </div>
+              </div>
+            ` : store && store.category === 'Beauty' ? `
+              <div class="grid grid-cols-2 gap-3 mt-4">
+                <div class="bg-surface-container-low p-4 rounded-xl border border-surface-variant/20">
+                  <span class="material-symbols-outlined text-primary mb-2 block text-2xl">workspace_premium</span>
+                  <p class="font-bold text-sm text-on-surface">${I18N.t('专业服务','Professional')}</p>
+                  <p class="text-xs text-secondary opacity-70">${I18N.t('资深美容师','Expert staff')}</p>
+                </div>
+                <div class="bg-surface-container-low p-4 rounded-xl border border-surface-variant/20">
+                  <span class="material-symbols-outlined text-primary mb-2 block text-2xl">spa</span>
+                  <p class="font-bold text-sm text-on-surface">${I18N.t('舒适环境','Relaxing')}</p>
+                  <p class="text-xs text-secondary opacity-70">${I18N.t('私密空间','Private room')}</p>
+                </div>
+              </div>
+            ` : `
+              <div class="grid grid-cols-2 gap-3 mt-4">
+                <div class="bg-surface-container-low p-4 rounded-xl border border-surface-variant/20">
+                  <span class="material-symbols-outlined text-primary mb-2 block text-2xl">eco</span>
+                  <p class="font-bold text-sm text-on-surface">${I18N.t('新鲜直供','Fresh Supply')}</p>
+                  <p class="text-xs text-secondary opacity-70">${I18N.t('当日采购','Daily sourced')}</p>
+                </div>
+                <div class="bg-surface-container-low p-4 rounded-xl border border-surface-variant/20">
+                  <span class="material-symbols-outlined text-primary mb-2 block text-2xl">health_and_safety</span>
+                  <p class="font-bold text-sm text-on-surface">${I18N.t('品质保证','Quality Assured')}</p>
+                  <p class="text-xs text-secondary opacity-70">${I18N.t('安全可靠','Safe & reliable')}</p>
+                </div>
+              </div>
+            `}
+            
+            <p class="mt-4">${I18N.t(
+              '由专业团队精心制作，采用标准化流程，确保每一份商品都能达到最佳品质。入口后能感受到丰富的层次感，回味悠长。',
+              'Carefully crafted by our professional team using standardized processes to ensure optimal quality in every product.'
+            )}</p>
+          </div>
+        </div>
+
+        <!-- Secondary Visuals (Bento Style) -->
+        ${store && store.category === 'Coffee' ? `
+          <div class="mt-6 grid grid-cols-2 gap-3">
+            <div class="rounded-xl overflow-hidden shadow-sm h-48">
+              <img class="w-full h-full object-cover" src="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=400&h=300&fit=crop" alt="Coffee brewing"/>
+            </div>
+            <div class="rounded-xl overflow-hidden shadow-sm h-48">
+              <img class="w-full h-full object-cover" src="https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=400&h=300&fit=crop" alt="Coffee cup"/>
+            </div>
+          </div>
+        ` : ''}
+
+        <!-- Store Information -->
+        ${store ? `
+          <div class="mt-6 p-4 bg-orange-50/50 rounded-xl flex items-center justify-between border border-orange-100" onclick="location.href='store_detail.html?id=${store.id}'">
+            <div class="flex items-center gap-3">
+              <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm">
+                <span class="material-symbols-outlined text-primary">storefront</span>
+              </div>
+              <div>
+                <p class="font-bold text-sm text-on-surface">${I18N.t(store.name_zh, store.name_en)}</p>
+                <p class="text-xs text-secondary">${I18N.t('距离您 800m | 营业中','800m away | Open')}</p>
+              </div>
+            </div>
+            <span class="material-symbols-outlined text-on-surface-variant">chevron_right</span>
+          </div>
+        ` : ''}
+
+        <!-- Points Benefits -->
+        ${product.points_reward > 0 || product.points_redeem > 0 ? `
+          <div class="mt-6 bg-amber-50 rounded-xl p-4 border border-amber-100 space-y-2">
+            <p class="font-bold text-amber-800 text-sm flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-amber-600 text-xl" style="font-variation-settings:'FILL' 1,'wght' 500">stars</span>
+              <span>${I18N.t('积分权益','Points Benefits')}</span>
+            </p>
+            ${product.points_reward > 0 ? `<p class="text-xs text-amber-700">${I18N.t('购买此商品可获得 '+product.points_reward+' 积分','Earn '+product.points_reward+' points')}</p>` : ''}
+            ${product.points_redeem > 0 ? `
+              <div class="flex items-center justify-between">
+                <p class="text-xs text-amber-700">${I18N.t('最多可用 '+maxRedeem+' 积分抵扣','Use up to '+maxRedeem+' pts')}</p>
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" id="use-points" onchange="updatePrice()" class="rounded text-amber-500 focus:ring-amber-400" ${maxRedeem > 0 ? '' : 'disabled'}/>
+                  <span class="text-xs font-bold text-amber-700">${I18N.t('使用积分','Use Points')}</span>
+                </label>
+              </div>
+            ` : ''}
+          </div>
+        ` : ''}
+
+        <!-- Action Buttons -->
+        <div class="mt-6 flex gap-3">
+          <button onclick="addToCart()" class="flex-1 py-3 border-2 border-primary-container text-primary-container font-bold rounded-xl text-sm active:scale-95 transition-transform">
+            ${I18N.t('加入购物车','Add to Cart')}
+          </button>
+          <button onclick="buyNow()" class="flex-1 py-3 bg-primary-container text-white font-bold rounded-xl text-sm shadow-md active:scale-95 transition-transform">
+            ${I18N.t('立即购买','Buy Now')}
+          </button>
+        </div>
+      </div>
+    `;
+    
+    I18N.applyAll();
+  }
+
+  let quantity = 1;
+  let selectedColor = 0;
+  let selectedSize = 0;
+  let selectedDelivery = 'home';
+
+  function changeQty(delta) {
+    quantity = Math.max(1, Math.min(99, quantity + delta));
+    document.getElementById('quantity').textContent = quantity;
+  }
+
+  function selectColor(colorIndex) {
+    selectedColor = colorIndex;
+    
+    // 更新UI
+    if (product && product.variants && product.variants.colors) {
+      product.variants.colors.forEach((_, idx) => {
+        const btn = document.getElementById(`color-${idx}`);
+        if (btn) {
+          if (idx === colorIndex) {
+            btn.classList.remove('border-transparent');
+            btn.classList.add('border-primary-container');
+          } else {
+            btn.classList.remove('border-primary-container');
+            btn.classList.add('border-transparent');
+          }
+        }
+      });
+    }
+  }
+
+  function selectSize(sizeIndex) {
+    selectedSize = sizeIndex;
+    
+    // 更新UI
+    if (product && product.variants && product.variants.sizes) {
+      product.variants.sizes.forEach((_, idx) => {
+        const btn = document.getElementById(`size-${idx}`);
+        if (btn) {
+          if (idx === sizeIndex) {
+            btn.classList.add('bg-primary-container', 'text-white', 'border-primary-container', 'font-bold');
+            btn.classList.remove('border-gray-300', 'text-on-surface');
+          } else {
+            btn.classList.remove('bg-primary-container', 'text-white', 'border-primary-container', 'font-bold');
+            btn.classList.add('border-gray-300', 'text-on-surface');
+          }
+        }
+      });
+    }
+  }
+
+  function selectDelivery(method) {
+    selectedDelivery = method;
+    
+    // 更新UI
+    const homeBtn = document.getElementById('delivery-home');
+    const pickupBtn = document.getElementById('delivery-pickup');
+    
+    if (method === 'home') {
+      if (homeBtn) {
+        homeBtn.classList.add('border-primary-container', 'bg-primary/5');
+        homeBtn.classList.remove('border-gray-300');
+        homeBtn.querySelector('span.material-symbols-outlined').classList.add('text-primary');
+        homeBtn.querySelector('span.material-symbols-outlined').classList.remove('text-secondary');
+        homeBtn.querySelector('span:last-child').classList.add('text-primary', 'font-bold');
+        homeBtn.querySelector('span:last-child').classList.remove('text-secondary');
+      }
+      if (pickupBtn) {
+        pickupBtn.classList.remove('border-primary-container', 'bg-primary/5');
+        pickupBtn.classList.add('border-gray-300');
+        pickupBtn.querySelector('span.material-symbols-outlined').classList.remove('text-primary');
+        pickupBtn.querySelector('span.material-symbols-outlined').classList.add('text-secondary');
+        pickupBtn.querySelector('span:last-child').classList.remove('text-primary', 'font-bold');
+        pickupBtn.querySelector('span:last-child').classList.add('text-secondary');
+      }
+    } else {
+      if (pickupBtn) {
+        pickupBtn.classList.add('border-primary-container', 'bg-primary/5');
+        pickupBtn.classList.remove('border-gray-300');
+        pickupBtn.querySelector('span.material-symbols-outlined').classList.add('text-primary');
+        pickupBtn.querySelector('span.material-symbols-outlined').classList.remove('text-secondary');
+        pickupBtn.querySelector('span:last-child').classList.add('text-primary', 'font-bold');
+        pickupBtn.querySelector('span:last-child').classList.remove('text-secondary');
+      }
+      if (homeBtn) {
+        homeBtn.classList.remove('border-primary-container', 'bg-primary/5');
+        homeBtn.classList.add('border-gray-300');
+        homeBtn.querySelector('span.material-symbols-outlined').classList.remove('text-primary');
+        homeBtn.querySelector('span.material-symbols-outlined').classList.add('text-secondary');
+        homeBtn.querySelector('span:last-child').classList.remove('text-primary', 'font-bold');
+        homeBtn.querySelector('span:last-child').classList.add('text-secondary');
+      }
+    }
+  }
+
+  function updatePrice() {
+    if (!product) return;
+    const usePoints = document.getElementById('use-points')?.checked;
+    // Price update logic can be added here if needed
+  }
+
+  function addToCart() {
+    if (!product) return;
+    let currentUser = DB.getCurrentUser();
+    if (!currentUser) {
+      const guestPhone = 'guest_' + Date.now();
+      currentUser = DB.registerUser(guestPhone, 'guest123', I18N.t('游客用户', 'Guest User'));
+    }
+    
+    // 构建规格字符串
+    let spec = '';
+    if (product.variants) {
+      const parts = [];
+      if (product.variants.colors) {
+        const color = product.variants.colors[selectedColor];
+        parts.push(I18N.t(color.name_zh, color.name_en));
+      }
+      if (product.variants.sizes) {
+        parts.push(product.variants.sizes[selectedSize]);
+      }
+      parts.push(selectedDelivery === 'home' ? I18N.t('快递到家', 'Home Delivery') : I18N.t('到店自提', 'Store Pickup'));
+      spec = parts.join(' / ');
+    }
+    
+    for (let i = 0; i < quantity; i++) {
+      DB.addToCart(currentUser.id, product.id, 1, spec);
+    }
+    
+    updateCartBadge();
+    
+    const btn = event.target.closest('button');
+    const orig = btn.innerHTML;
+    btn.innerHTML = `<span class="material-symbols-outlined">check</span> ${I18N.t('已添加','Added')}`;
+    btn.classList.add('bg-green-500', 'text-white', 'border-green-500');
+    setTimeout(() => { 
+      btn.innerHTML = orig;
+      btn.classList.remove('bg-green-500', 'text-white', 'border-green-500');
+      I18N.applyAll();
+    }, 1000);
+  }
+
+  function buyNow() {
+    if (!product) return;
+    let currentUser = DB.getCurrentUser();
+    if (!currentUser) {
+      const guestPhone = 'guest_' + Date.now();
+      currentUser = DB.registerUser(guestPhone, 'guest123', I18N.t('游客用户', 'Guest User'));
+    }
+    
+    const usePoints = document.getElementById('use-points')?.checked;
+    const pointsUsed = usePoints ? Math.min(product.points_redeem || 0, currentUser.points) : 0;
+    
+    // 构建规格字符串
+    let spec = '';
+    if (product.variants) {
+      const parts = [];
+      if (product.variants.colors) {
+        const color = product.variants.colors[selectedColor];
+        parts.push(I18N.t(color.name_zh, color.name_en));
+      }
+      if (product.variants.sizes) {
+        parts.push(product.variants.sizes[selectedSize]);
+      }
+      parts.push(selectedDelivery === 'home' ? I18N.t('快递到家', 'Home Delivery') : I18N.t('到店自提', 'Store Pickup'));
+      spec = parts.join(' / ');
+    }
+    
+    const items = [];
+    for (let i = 0; i < quantity; i++) {
+      items.push({
+        product_id: product.id,
+        name_zh: product.name_zh,
+        price: product.price,
+        quantity: 1,
+        image: product.image,
+        spec: spec,
+      });
+    }
+    
+    const order = DB.createOrder(currentUser.id, product.merchant_id, items, pointsUsed);
+    location.href = 'order_success.html?order=' + order.order_no;
+  }
+  } catch (error) {
+    console.error('页面加载错误:', error);
+    if (document.getElementById('product-content')) {
+      document.getElementById('product-content').innerHTML = `
+        <div class="text-center py-20 px-4">
+          <span class="material-symbols-outlined text-6xl text-gray-300">error</span>
+          <p class="mt-4 text-secondary">页面加载出错</p>
+          <p class="mt-2 text-xs text-gray-400">${error.message}</p>
+          <button onclick="location.href='home.html'" class="mt-4 px-6 py-2 bg-primary-container text-white rounded-lg">返回首页</button>
+        </div>
+      `;
+    }
+  }
+</script>
+</body>
+</html>

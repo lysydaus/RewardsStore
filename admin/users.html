@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>用户列表 - Admin</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script>tailwind.config={theme:{extend:{colors:{"primary":"#3b82f6","primary-container":"#4f46e5","surface":"#f9f9f9","on-surface":"#1a1c1c","secondary":"#5f5e5e"}}}}</script>
+<style>
+  body{font-family:'Work Sans',sans-serif;background:#f9f9f9;min-height:100dvh;}
+  .material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;}
+</style>
+</head>
+<body class="bg-surface text-on-surface pb-24">
+
+<header class="sticky top-0 z-50 bg-white shadow-sm flex justify-between items-center px-4 h-16">
+  <h1 class="font-black text-primary-container text-lg" style="font-family:'Plus Jakarta Sans',sans-serif">用户列表</h1>
+  <button onclick="logout()" class="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center">
+    <span class="material-symbols-outlined text-secondary text-xl">logout</span>
+  </button>
+</header>
+
+<main class="p-4 space-y-4">
+  <!-- 统计卡片 -->
+  <div class="grid grid-cols-3 gap-3">
+    <div class="bg-white p-4 rounded-xl shadow-sm">
+      <p class="text-xs text-secondary">总用户</p>
+      <p id="stat-total" class="text-2xl font-black text-primary mt-1">0</p>
+    </div>
+    <div class="bg-white p-4 rounded-xl shadow-sm">
+      <p class="text-xs text-secondary">新注册</p>
+      <p id="stat-new" class="text-2xl font-black text-green-600 mt-1">0</p>
+    </div>
+    <div class="bg-white p-4 rounded-xl shadow-sm">
+      <p class="text-xs text-secondary">流失召回</p>
+      <p id="stat-recall" class="text-2xl font-black text-amber-600 mt-1">0</p>
+    </div>
+  </div>
+
+  <!-- 筛选 -->
+  <div class="bg-white rounded-xl p-3 shadow-sm">
+    <div class="flex gap-2 overflow-x-auto">
+      <button onclick="filterUsers('all')" id="filter-all" class="filter-btn px-4 py-2 rounded-lg text-xs font-bold bg-blue-100 text-primary-container whitespace-nowrap">全部</button>
+      <button onclick="filterUsers('potential')" id="filter-potential" class="filter-btn px-4 py-2 rounded-lg text-xs font-bold bg-gray-100 text-secondary whitespace-nowrap">潜在会员</button>
+      <button onclick="filterUsers('new')" id="filter-new" class="filter-btn px-4 py-2 rounded-lg text-xs font-bold bg-gray-100 text-secondary whitespace-nowrap">新注册用户</button>
+      <button onclick="filterUsers('trial')" id="filter-trial" class="filter-btn px-4 py-2 rounded-lg text-xs font-bold bg-gray-100 text-secondary whitespace-nowrap">7天准会员</button>
+      <button onclick="filterUsers('formal')" id="filter-formal" class="filter-btn px-4 py-2 rounded-lg text-xs font-bold bg-gray-100 text-secondary whitespace-nowrap">会员用户</button>
+      <button onclick="filterUsers('recall')" id="filter-recall" class="filter-btn px-4 py-2 rounded-lg text-xs font-bold bg-gray-100 text-secondary whitespace-nowrap">流失召回</button>
+    </div>
+  </div>
+
+  <!-- 用户表格 -->
+  <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-gray-50">
+          <tr class="border-b">
+            <th class="px-4 py-3 text-left text-xs font-bold text-secondary">ID</th>
+            <th class="px-4 py-3 text-left text-xs font-bold text-secondary">昵称</th>
+            <th class="px-4 py-3 text-left text-xs font-bold text-secondary">手机号</th>
+            <th class="px-4 py-3 text-left text-xs font-bold text-secondary">密码</th>
+            <th class="px-4 py-3 text-left text-xs font-bold text-secondary">会员状态</th>
+            <th class="px-4 py-3 text-left text-xs font-bold text-secondary">等级</th>
+            <th class="px-4 py-3 text-left text-xs font-bold text-secondary">积分</th>
+            <th class="px-4 py-3 text-left text-xs font-bold text-secondary">注册时间</th>
+            <th class="px-4 py-3 text-left text-xs font-bold text-secondary">操作</th>
+          </tr>
+        </thead>
+        <tbody id="users-tbody" class="divide-y"></tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-2 py-2 bg-white border-t shadow-lg z-50" id="admin-bottom-nav"></nav>
+
+<!-- 编辑用户弹窗 -->
+<div id="edit-modal" class="hidden fixed inset-0 z-50 bg-black/40 flex items-end md:items-center justify-center p-0 md:p-4">
+  <div class="bg-white w-full md:max-w-lg rounded-t-3xl md:rounded-2xl p-6 max-h-[90dvh] overflow-y-auto">
+    <div class="flex justify-between items-center mb-5">
+      <h3 class="font-black text-lg text-on-surface">编辑用户</h3>
+      <button onclick="closeEditModal()" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
+        <span class="material-symbols-outlined text-secondary text-xl">close</span>
+      </button>
+    </div>
+    <form id="edit-form" class="space-y-4" onsubmit="saveUser(event)">
+      <input type="hidden" id="edit-id"/>
+      <div>
+        <label class="text-xs font-semibold text-secondary mb-1 block">昵称</label>
+        <input id="edit-nickname" type="text" required class="w-full bg-gray-50 border-none rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-blue-300"/>
+      </div>
+      <div>
+        <label class="text-xs font-semibold text-secondary mb-1 block">会员状态</label>
+        <select id="edit-member-status" class="w-full bg-gray-50 border-none rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-blue-300">
+          <option value="potential">潜在会员</option>
+          <option value="new">新注册用户</option>
+          <option value="trial">7天准会员</option>
+          <option value="formal">会员用户</option>
+          <option value="recall">流失召回用户</option>
+        </select>
+      </div>
+      <div>
+        <label class="text-xs font-semibold text-secondary mb-1 block">会员等级</label>
+        <select id="edit-level" class="w-full bg-gray-50 border-none rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-blue-300">
+          <option value="bronze">青铜</option>
+          <option value="silver">白银</option>
+          <option value="gold">黄金</option>
+          <option value="platinum">铂金</option>
+        </select>
+      </div>
+      <div>
+        <label class="text-xs font-semibold text-secondary mb-1 block">积分</label>
+        <input id="edit-points" type="number" class="w-full bg-gray-50 border-none rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-blue-300"/>
+      </div>
+      <button type="submit" class="w-full bg-primary-container text-white font-bold py-4 rounded-xl shadow-md active:scale-[.98] transition-transform">
+        保存
+      </button>
+    </form>
+  </div>
+</div>
+
+<script src="../db.js"></script>
+<script src="_nav.js"></script>
+<script>
+  DB.init();
+  checkAdminAuth();
+  renderAdminNav('users');
+
+  let currentFilter = 'all';
+
+  const MEMBER_STATUS = {
+    potential: { label: '潜在会员', color: 'bg-gray-100 text-gray-700' },
+    new: { label: '新注册用户', color: 'bg-green-100 text-green-700' },
+    trial: { label: '7天准会员', color: 'bg-indigo-100 text-indigo-700' },
+    formal: { label: '会员用户', color: 'bg-blue-100 text-blue-700' },
+    recall: { label: '流失召回', color: 'bg-amber-100 text-amber-700' }
+  };
+
+  const LEVEL_LABELS = {
+    bronze: '青铜', silver: '白银', gold: '黄金', platinum: '铂金'
+  };
+
+  function filterUsers(status) {
+    currentFilter = status;
+    document.querySelectorAll('.filter-btn').forEach(b => {
+      b.className = 'filter-btn px-4 py-2 rounded-lg text-xs font-bold bg-gray-100 text-secondary whitespace-nowrap';
+    });
+    document.getElementById('filter-' + status).className = 'filter-btn px-4 py-2 rounded-lg text-xs font-bold bg-blue-100 text-primary-container whitespace-nowrap';
+    renderUsers();
+  }
+
+  function renderUsers() {
+    let users = DB.findAll('users');
+    
+    // 确保所有用户都有member_status字段
+    users = users.map(u => ({
+      ...u,
+      member_status: u.member_status || 'new'
+    }));
+
+    if (currentFilter !== 'all') {
+      users = users.filter(u => u.member_status === currentFilter);
+    }
+
+    // 统计
+    const allUsers = DB.findAll('users');
+    document.getElementById('stat-total').textContent = allUsers.length;
+    document.getElementById('stat-new').textContent = allUsers.filter(u => (u.member_status || 'new') === 'new').length;
+    document.getElementById('stat-recall').textContent = allUsers.filter(u => u.member_status === 'recall').length;
+
+    const tbody = document.getElementById('users-tbody');
+    if (!users.length) {
+      tbody.innerHTML = '<tr><td colspan="8" class="text-center py-10 text-secondary">暂无用户</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = users.map(u => {
+      const status = MEMBER_STATUS[u.member_status || 'new'];
+      const date = u.created_at ? new Date(u.created_at).toLocaleDateString() : '-';
+      return `
+      <tr class="hover:bg-gray-50">
+        <td class="px-4 py-3 font-mono text-xs">${u.id}</td>
+        <td class="px-4 py-3 font-semibold">${u.nickname || '-'}</td>
+        <td class="px-4 py-3">${u.phone}</td>
+        <td class="px-4 py-3 font-mono text-xs text-blue-600">${u.password || '-'}</td>
+        <td class="px-4 py-3">
+          <span class="px-2 py-1 rounded-full text-xs font-bold ${status.color}">${status.label}</span>
+        </td>
+        <td class="px-4 py-3">${LEVEL_LABELS[u.level] || u.level}</td>
+        <td class="px-4 py-3 font-bold text-amber-600">${u.points || 0}</td>
+        <td class="px-4 py-3 text-xs text-secondary">${date}</td>
+        <td class="px-4 py-3">
+          <button onclick="editUser(${u.id})" class="text-primary hover:underline text-xs font-semibold">编辑</button>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  function editUser(id) {
+    const user = DB.findById('users', id);
+    document.getElementById('edit-id').value = id;
+    document.getElementById('edit-nickname').value = user.nickname || '';
+    document.getElementById('edit-member-status').value = user.member_status || 'new';
+    document.getElementById('edit-level').value = user.level || 'bronze';
+    document.getElementById('edit-points').value = user.points || 0;
+    document.getElementById('edit-modal').classList.remove('hidden');
+  }
+
+  function closeEditModal() {
+    document.getElementById('edit-modal').classList.add('hidden');
+  }
+
+  function saveUser(e) {
+    e.preventDefault();
+    const id = parseInt(document.getElementById('edit-id').value);
+    const data = {
+      nickname: document.getElementById('edit-nickname').value,
+      member_status: document.getElementById('edit-member-status').value,
+      level: document.getElementById('edit-level').value,
+      points: parseInt(document.getElementById('edit-points').value) || 0
+    };
+    DB.update('users', id, data);
+    closeEditModal();
+    renderUsers();
+  }
+
+  renderUsers();
+</script>
+</body>
+</html>

@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>会员开通</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script>tailwind.config={theme:{extend:{colors:{"primary":"#a04100","primary-container":"#ff6b00","on-primary":"#ffffff","surface":"#f9f9f9","on-surface":"#1a1c1c","secondary":"#5f5e5e"}}}}</script>
+<style>
+  body{font-family:'Work Sans',sans-serif;background:#f9f9f9;min-height:100dvh;}
+  .material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;}
+  body{opacity:0;}
+  body.loaded{opacity:1;transition:opacity .3s;}
+</style>
+</head>
+<body class="bg-surface text-on-surface pb-24">
+
+<header class="sticky top-0 z-50 bg-white shadow-sm flex items-center px-4 h-16">
+  <button onclick="history.back()" class="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center mr-3">
+    <span class="material-symbols-outlined text-secondary">arrow_back</span>
+  </button>
+  <h1 class="font-black text-primary-container text-lg flex-1">会员开通</h1>
+</header>
+
+<main class="p-4 space-y-4 max-w-2xl mx-auto">
+  
+  <!-- 会员权益摘要 -->
+  <div class="bg-gradient-to-br from-orange-500 to-amber-600 rounded-2xl p-6 text-white shadow-lg">
+    <h2 class="text-2xl font-black mb-4">会员专享权益</h2>
+    <div class="grid grid-cols-3 gap-3">
+      <div class="text-center">
+        <span class="material-symbols-outlined text-4xl mb-2" style="font-variation-settings:'FILL' 1">local_offer</span>
+        <p class="text-xs font-semibold">专属价格</p>
+      </div>
+      <div class="text-center">
+        <span class="material-symbols-outlined text-4xl mb-2" style="font-variation-settings:'FILL' 1">local_shipping</span>
+        <p class="text-xs font-semibold">全场包邮</p>
+      </div>
+      <div class="text-center">
+        <span class="material-symbols-outlined text-4xl mb-2" style="font-variation-settings:'FILL' 1">verified_user</span>
+        <p class="text-xs font-semibold">退换无忧</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 权益计算器 -->
+  <div class="bg-white rounded-2xl shadow-md p-6">
+    <div class="flex items-center gap-2 mb-4">
+      <span class="material-symbols-outlined text-primary-container text-2xl">calculate</span>
+      <h3 class="font-black text-lg">算一算你能省多少</h3>
+    </div>
+    
+    <div class="space-y-4">
+      <div>
+        <label class="text-sm font-semibold text-secondary mb-2 block">预计年消费金额（元）</label>
+        <input id="annual-spending" type="number" placeholder="例如：5000" 
+          class="w-full bg-gray-50 border-none rounded-xl py-3 px-4 text-lg font-bold focus:ring-2 focus:ring-orange-300"/>
+      </div>
+      
+      <button id="calc-btn" onclick="calculateSavings()" disabled
+        class="w-full bg-gray-300 text-white font-bold py-4 rounded-xl transition-all disabled:opacity-50">
+        开始计算
+      </button>
+      
+      <!-- 计算结果 -->
+      <div id="calc-result" class="hidden">
+        <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-6 border-2 border-green-200">
+          <p class="text-sm text-secondary mb-2">预估每年可省</p>
+          <p class="text-4xl font-black text-green-600 mb-4">¥<span id="total-savings">0</span></p>
+          
+          <button onclick="toggleDetails()" class="text-sm text-primary-container font-semibold flex items-center gap-1">
+            <span id="details-text">查看明细</span>
+            <span id="details-icon" class="material-symbols-outlined text-sm">expand_more</span>
+          </button>
+          
+          <div id="savings-details" class="hidden mt-4 space-y-2 pt-4 border-t border-green-200">
+            <div class="flex justify-between text-sm">
+              <span class="text-secondary">商品价差节省</span>
+              <span class="font-bold text-green-600">¥<span id="product-savings">0</span></span>
+            </div>
+            <div class="flex justify-between text-sm">
+              <span class="text-secondary">运费节省</span>
+              <span class="font-bold text-green-600">¥<span id="shipping-savings">0</span></span>
+            </div>
+            <div class="flex justify-between text-sm">
+              <span class="text-secondary">退换无忧节省</span>
+              <span class="font-bold text-green-600">¥<span id="return-savings">0</span></span>
+            </div>
+          </div>
+          
+          <p class="text-xs text-secondary mt-4">* 实际节省因消费品类和频次而异</p>
+        </div>
+        
+        <!-- CTA按钮 -->
+        <div class="grid grid-cols-2 gap-3 mt-4">
+          <button onclick="openMembership()" id="calc-open-btn"
+            class="bg-primary-container text-white font-bold py-4 rounded-xl shadow-md active:scale-[.98] transition-transform">
+            立即开通 ¥<span id="member-price">199</span>/年
+          </button>
+          <button onclick="claimTrial()" id="calc-trial-btn"
+            class="bg-white border-2 border-primary-container text-primary-container font-bold py-4 rounded-xl active:scale-[.98] transition-transform">
+            先免费体验7天
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 会员价格卡片 -->
+  <div class="bg-white rounded-2xl shadow-md p-6">
+    <div class="flex items-center justify-between mb-4">
+      <div>
+        <h3 class="font-black text-xl">年度会员</h3>
+        <p class="text-sm text-secondary">全年畅享会员权益</p>
+      </div>
+      <div class="text-right">
+        <p id="display-price" class="text-3xl font-black text-primary-container">¥199</p>
+        <p id="original-price-text" class="text-xs text-secondary line-through hidden">¥299</p>
+      </div>
+    </div>
+    
+    <!-- 限时优惠提示 -->
+    <div id="limited-offer-banner" class="hidden bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-200 rounded-xl p-3 mb-4">
+      <div class="flex items-center gap-2">
+        <span class="material-symbols-outlined text-red-500 text-xl" style="font-variation-settings:'FILL' 1">local_fire_department</span>
+        <div class="flex-1">
+          <p class="text-sm font-bold text-red-600">限时优惠</p>
+          <p class="text-xs text-secondary">准会员专享价 ¥<span id="limited-price-text">169</span>（原价¥<span id="normal-price-text">199</span>）</p>
+        </div>
+      </div>
+    </div>
+    
+    <button onclick="openMembership()" 
+      class="w-full bg-primary-container text-white font-bold py-4 rounded-xl shadow-md active:scale-[.98] transition-transform">
+      立即开通
+    </button>
+  </div>
+
+  <!-- 免费体验卡片 -->
+  <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 border-2 border-blue-200">
+    <div class="flex items-center gap-3 mb-3">
+      <span class="material-symbols-outlined text-blue-600 text-3xl" style="font-variation-settings:'FILL' 1">card_giftcard</span>
+      <div>
+        <h3 class="font-black text-lg">还没想好？先免费体验7天</h3>
+        <p class="text-sm text-secondary">零成本感受会员权益</p>
+      </div>
+    </div>
+    <button onclick="claimTrial()" id="trial-btn"
+      class="w-full bg-blue-600 text-white font-bold py-4 rounded-xl shadow-md active:scale-[.98] transition-transform">
+      领取7天体验
+    </button>
+    <p class="text-xs text-secondary mt-3 text-center">每个账号限领1次</p>
+  </div>
+
+</main>
+
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-2 py-2 bg-white border-t shadow-lg z-50" id="customer-bottom-nav"></nav>
+
+<script src="../db.js"></script>
+<script src="_nav.js"></script>
+<script src="_message_banner.js"></script>
+<script>
+  DB.init();
+  if (!checkAuth()) throw new Error('Not authenticated');
+  renderCustomerNav('profile');
+  
+  const user = DB.getCurrentUser();
+  const config = JSON.parse(localStorage.getItem('system_config') || '{}');
+  const isMember = DB.isMemberActive(user.id);
+  const isFormalMember = user.is_formal_member && user.member_expire_at && new Date(user.member_expire_at) > new Date();
+  const trialTime = DB.getTrialRemainingTime(user.id);
+  const isTrialActive = trialTime && !trialTime.expired;
+  
+  // 判断是否可以享受限时优惠
+  const normalPrice = config.memberYearlyPrice || 199;
+  const limitedPrice = config.trialLimitedPrice || 169;
+  const canGetLimitedOffer = user.trial_claimed && !user.limited_offer_used && !isFormalMember;
+  
+  // 更新会员价格显示
+  document.getElementById('member-price').textContent = normalPrice;
+  
+  // 如果可以享受限时优惠，显示优惠信息
+  if (canGetLimitedOffer) {
+    document.getElementById('display-price').textContent = '¥' + limitedPrice;
+    document.getElementById('display-price').classList.remove('text-primary-container');
+    document.getElementById('display-price').classList.add('text-red-600');
+    document.getElementById('original-price-text').textContent = '¥' + normalPrice;
+    document.getElementById('original-price-text').classList.remove('hidden');
+    document.getElementById('limited-offer-banner').classList.remove('hidden');
+    document.getElementById('limited-price-text').textContent = limitedPrice;
+    document.getElementById('normal-price-text').textContent = normalPrice;
+    
+    // 更新计算器中的价格
+    document.getElementById('member-price').textContent = limitedPrice;
+  }
+  
+  // 如果是正式会员，禁用开通按钮
+  if (isFormalMember) {
+    const openBtns = document.querySelectorAll('button[onclick="openMembership()"]');
+    openBtns.forEach(btn => {
+      btn.disabled = true;
+      btn.classList.add('opacity-50', 'cursor-not-allowed', 'bg-gray-400');
+      btn.classList.remove('bg-primary-container');
+      btn.textContent = '已开通会员';
+      btn.onclick = null;
+    });
+    
+    // 也禁用计算器中的开通按钮
+    const calcOpenBtn = document.getElementById('calc-open-btn');
+    if (calcOpenBtn) {
+      calcOpenBtn.disabled = true;
+      calcOpenBtn.classList.add('opacity-50', 'cursor-not-allowed', 'bg-gray-400');
+      calcOpenBtn.classList.remove('bg-primary-container');
+      calcOpenBtn.textContent = '已开通会员';
+      calcOpenBtn.onclick = null;
+    }
+  }
+  
+  // 检查用户是否已领取体验或正在体验中
+  const trialBtn = document.getElementById('trial-btn');
+  if (user.trial_claimed || isFormalMember || isTrialActive) {
+    trialBtn.disabled = true;
+    trialBtn.classList.add('opacity-50', 'cursor-not-allowed', 'bg-gray-400');
+    trialBtn.classList.remove('bg-blue-600');
+    trialBtn.onclick = null;
+    if (isFormalMember) {
+      trialBtn.textContent = '您已是正式会员';
+    } else if (isTrialActive) {
+      trialBtn.textContent = '体验进行中（还剩' + trialTime.days + '天）';
+    } else {
+      trialBtn.textContent = '您已领取过体验';
+    }
+    
+    // 也禁用计算器中的体验按钮
+    const calcTrialBtn = document.getElementById('calc-trial-btn');
+    if (calcTrialBtn) {
+      calcTrialBtn.disabled = true;
+      calcTrialBtn.classList.add('opacity-50', 'cursor-not-allowed', 'bg-gray-400');
+      calcTrialBtn.classList.remove('bg-white', 'border-primary-container', 'text-primary-container');
+      calcTrialBtn.classList.add('text-white');
+      calcTrialBtn.onclick = null;
+      if (isFormalMember) {
+        calcTrialBtn.textContent = '您已是正式会员';
+      } else if (isTrialActive) {
+        calcTrialBtn.textContent = '体验进行中（还剩' + trialTime.days + '天）';
+      } else {
+        calcTrialBtn.textContent = '您已领取过体验';
+      }
+    }
+  }
+  
+  // 输入框监听
+  document.getElementById('annual-spending').addEventListener('input', function(e) {
+    const value = parseFloat(e.target.value);
+    const btn = document.getElementById('calc-btn');
+    if (value > 0 && value <= 500000) {
+      btn.disabled = false;
+      btn.classList.remove('bg-gray-300');
+      btn.classList.add('bg-primary-container');
+    } else {
+      btn.disabled = true;
+      btn.classList.add('bg-gray-300');
+      btn.classList.remove('bg-primary-container');
+    }
+  });
+  
+  function calculateSavings() {
+    const spending = parseFloat(document.getElementById('annual-spending').value);
+    
+    if (!spending || spending <= 0 || spending > 500000) {
+      alert('请输入合理的消费金额（1-500000元）');
+      return;
+    }
+    
+    const savings = DB.calculateMemberSavings(spending);
+    
+    document.getElementById('total-savings').textContent = savings.total;
+    document.getElementById('product-savings').textContent = savings.productSavings;
+    document.getElementById('shipping-savings').textContent = savings.shippingSavings;
+    document.getElementById('return-savings').textContent = savings.returnSavings;
+    
+    document.getElementById('calc-result').classList.remove('hidden');
+  }
+  
+  function toggleDetails() {
+    const details = document.getElementById('savings-details');
+    const icon = document.getElementById('details-icon');
+    const text = document.getElementById('details-text');
+    
+    if (details.classList.contains('hidden')) {
+      details.classList.remove('hidden');
+      icon.textContent = 'expand_less';
+      text.textContent = '收起明细';
+    } else {
+      details.classList.add('hidden');
+      icon.textContent = 'expand_more';
+      text.textContent = '查看明细';
+    }
+  }
+  
+  function openMembership() {
+    // 检查是否已经是会员
+    if (isFormalMember) {
+      alert('您已经是正式会员了！');
+      return;
+    }
+    // 跳转到支付页面
+    alert('跳转到会员支付页面（待实现）');
+    // window.location.href = 'membership_payment.html';
+  }
+  
+  function claimTrial() {
+    // 检查是否已经是会员
+    if (isFormalMember) {
+      alert('您已经是正式会员，无需体验！');
+      return;
+    }
+    
+    // 检查是否正在体验中
+    if (isTrialActive) {
+      alert('您正在体验中，还剩' + trialTime.days + '天' + trialTime.hours + '小时！');
+      return;
+    }
+    
+    const result = DB.claimTrialMembership(user.id);
+    
+    if (!result.success) {
+      alert(result.message);
+      return;
+    }
+    
+    // 显示成功弹窗
+    if (confirm('恭喜！您已获得7天准会员体验\n\n体验期间可享受：\n• 商品会员专享价\n• 全场包邮\n• 30天无理由退换\n\n立即去购物？')) {
+      window.location.href = 'home.html';
+    } else {
+      location.reload();
+    }
+  }
+  
+  document.body.classList.add('loaded');
+</script>
+</body>
+</html>

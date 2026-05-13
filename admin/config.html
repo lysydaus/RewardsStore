@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>系统配置 - Admin</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script>tailwind.config={theme:{extend:{colors:{"primary":"#3b82f6","primary-container":"#4f46e5","surface":"#f9f9f9","on-surface":"#1a1c1c","secondary":"#5f5e5e"}}}}</script>
+<style>
+  body{font-family:'Work Sans',sans-serif;background:#f9f9f9;min-height:100dvh;}
+  .material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;}
+</style>
+</head>
+<body class="bg-surface text-on-surface pb-24">
+
+<header class="sticky top-0 z-50 bg-white shadow-sm flex justify-between items-center px-4 h-16">
+  <h1 class="font-black text-primary-container text-lg" style="font-family:'Plus Jakarta Sans',sans-serif">系统配置</h1>
+  <button onclick="logout()" class="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center">
+    <span class="material-symbols-outlined text-secondary text-xl">logout</span>
+  </button>
+</header>
+
+<main class="p-4 space-y-4 max-w-4xl mx-auto">
+  
+  <!-- 权益计算器配置 -->
+  <section class="bg-white rounded-xl shadow-sm p-6">
+    <h2 class="font-bold text-lg mb-4 flex items-center gap-2">
+      <span class="material-symbols-outlined text-primary">calculate</span>
+      权益计算器配置
+    </h2>
+    <div class="space-y-4">
+      <div>
+        <label class="text-sm font-semibold text-secondary mb-2 block">平均会员折扣率</label>
+        <input id="avg-member-discount" type="number" step="0.01" value="0.95" 
+          class="w-full bg-gray-50 border-none rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-blue-300"/>
+        <p class="text-xs text-secondary mt-1">例如：0.95 表示会员价为原价的95折</p>
+      </div>
+
+      <div>
+        <label class="text-sm font-semibold text-secondary mb-2 block">单笔运费（元）</label>
+        <input id="shipping-fee-per-order" type="number" value="8" 
+          class="w-full bg-gray-50 border-none rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-blue-300"/>
+      </div>
+
+      <div>
+        <label class="text-sm font-semibold text-secondary mb-2 block">年均订单数</label>
+        <input id="avg-orders-per-year" type="number" value="12" 
+          class="w-full bg-gray-50 border-none rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-blue-300"/>
+      </div>
+
+      <div>
+        <label class="text-sm font-semibold text-secondary mb-2 block">退换无忧年节省（元）</label>
+        <input id="return-insurance-per-year" type="number" value="50" 
+          class="w-full bg-gray-50 border-none rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-blue-300"/>
+      </div>
+    </div>
+  </section>
+
+  <!-- 会员价格配置 -->
+  <section class="bg-white rounded-xl shadow-sm p-6">
+    <h2 class="font-bold text-lg mb-4 flex items-center gap-2">
+      <span class="material-symbols-outlined text-primary">payments</span>
+      会员价格配置
+    </h2>
+    <div class="space-y-4">
+      <div>
+        <label class="text-sm font-semibold text-secondary mb-2 block">年度会员价格（元）</label>
+        <input id="member-yearly-price" type="number" value="199" 
+          class="w-full bg-gray-50 border-none rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-blue-300"/>
+      </div>
+
+      <div>
+        <label class="text-sm font-semibold text-secondary mb-2 block">准会员转正限时优惠价（元）</label>
+        <input id="trial-limited-price" type="number" value="169" 
+          class="w-full bg-gray-50 border-none rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-blue-300"/>
+      </div>
+
+      <div>
+        <label class="text-sm font-semibold text-secondary mb-2 block">限时优惠有效期（小时）</label>
+        <input id="trial-limited-hours" type="number" value="48" 
+          class="w-full bg-gray-50 border-none rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-blue-300"/>
+        <p class="text-xs text-secondary mt-1">准会员到期后多少小时内可享受优惠价</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 积分计算规则 -->
+  <section class="bg-white rounded-xl shadow-sm p-6">
+    <h2 class="font-bold text-lg mb-4 flex items-center gap-2">
+      <span class="material-symbols-outlined text-primary">calculate</span>
+      积分计算规则
+    </h2>
+    <div class="space-y-4">
+      <div>
+        <label class="text-sm font-semibold text-secondary mb-2 block">消费积分比例</label>
+        <div class="flex items-center gap-3">
+          <input id="points-ratio" type="number" step="0.01" value="0.1" 
+            class="flex-1 bg-gray-50 border-none rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-blue-300"/>
+          <span class="text-sm text-secondary">每消费1元获得积分</span>
+        </div>
+        <p class="text-xs text-secondary mt-1">例如：0.1 表示消费10元获得1积分</p>
+      </div>
+
+      <div>
+        <label class="text-sm font-semibold text-secondary mb-2 block">积分抵扣比例</label>
+        <div class="flex items-center gap-3">
+          <input id="points-deduction" type="number" step="0.01" value="0.01" 
+            class="flex-1 bg-gray-50 border-none rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-blue-300"/>
+          <span class="text-sm text-secondary">每1积分可抵扣金额（元）</span>
+        </div>
+        <p class="text-xs text-secondary mt-1">例如：0.01 表示100积分可抵扣1元</p>
+      </div>
+
+      <div>
+        <label class="text-sm font-semibold text-secondary mb-2 block">单笔订单最大积分抵扣比例</label>
+        <div class="flex items-center gap-3">
+          <input id="max-deduction-ratio" type="number" step="0.01" value="0.5" 
+            class="flex-1 bg-gray-50 border-none rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-blue-300"/>
+          <span class="text-sm text-secondary">订单金额的百分比</span>
+        </div>
+        <p class="text-xs text-secondary mt-1">例如：0.5 表示最多可抵扣订单金额的50%</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 会员等级权益 -->
+  <section class="bg-white rounded-xl shadow-sm p-6">
+    <h2 class="font-bold text-lg mb-4 flex items-center gap-2">
+      <span class="material-symbols-outlined text-primary">workspace_premium</span>
+      会员等级权益配置
+    </h2>
+    <div class="space-y-4">
+      <div>
+        <label class="text-sm font-semibold text-secondary mb-2 block">青铜会员积分倍率</label>
+        <input id="bronze-multiplier" type="number" step="0.1" value="1.0" 
+          class="w-full bg-gray-50 border-none rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-blue-300"/>
+      </div>
+
+      <div>
+        <label class="text-sm font-semibold text-secondary mb-2 block">白银会员积分倍率</label>
+        <input id="silver-multiplier" type="number" step="0.1" value="1.2" 
+          class="w-full bg-gray-50 border-none rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-blue-300"/>
+      </div>
+
+      <div>
+        <label class="text-sm font-semibold text-secondary mb-2 block">黄金会员积分倍率</label>
+        <input id="gold-multiplier" type="number" step="0.1" value="1.5" 
+          class="w-full bg-gray-50 border-none rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-blue-300"/>
+      </div>
+
+      <div>
+        <label class="text-sm font-semibold text-secondary mb-2 block">铂金会员积分倍率</label>
+        <input id="platinum-multiplier" type="number" step="0.1" value="2.0" 
+          class="w-full bg-gray-50 border-none rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-blue-300"/>
+      </div>
+    </div>
+  </section>
+
+  <!-- 新用户体验权益包 -->
+  <section class="bg-white rounded-xl shadow-sm p-6">
+    <h2 class="font-bold text-lg mb-4 flex items-center gap-2">
+      <span class="material-symbols-outlined text-primary">card_giftcard</span>
+      新用户体验权益包
+    </h2>
+    <div class="space-y-4">
+      <div>
+        <label class="text-sm font-semibold text-secondary mb-2 block">新用户注册赠送积分</label>
+        <input id="new-user-points" type="number" value="100" 
+          class="w-full bg-gray-50 border-none rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-blue-300"/>
+      </div>
+
+      <div>
+        <label class="text-sm font-semibold text-secondary mb-2 block">新用户首单优惠金额（元）</label>
+        <input id="first-order-discount" type="number" step="0.01" value="10" 
+          class="w-full bg-gray-50 border-none rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-blue-300"/>
+      </div>
+
+      <div>
+        <label class="text-sm font-semibold text-secondary mb-2 block">体验期天数</label>
+        <input id="trial-days" type="number" value="30" 
+          class="w-full bg-gray-50 border-none rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-blue-300"/>
+        <p class="text-xs text-secondary mt-1">体验期内享受特殊优惠</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 流失召回策略 -->
+  <section class="bg-white rounded-xl shadow-sm p-6">
+    <h2 class="font-bold text-lg mb-4 flex items-center gap-2">
+      <span class="material-symbols-outlined text-primary">campaign</span>
+      流失召回策略
+    </h2>
+    <div class="space-y-4">
+      <div>
+        <label class="text-sm font-semibold text-secondary mb-2 block">流失判定天数</label>
+        <input id="churn-days" type="number" value="90" 
+          class="w-full bg-gray-50 border-none rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-blue-300"/>
+        <p class="text-xs text-secondary mt-1">超过此天数未下单视为流失用户</p>
+      </div>
+
+      <div>
+        <label class="text-sm font-semibold text-secondary mb-2 block">召回优惠券金额（元）</label>
+        <input id="recall-coupon" type="number" step="0.01" value="20" 
+          class="w-full bg-gray-50 border-none rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-blue-300"/>
+      </div>
+
+      <div>
+        <label class="text-sm font-semibold text-secondary mb-2 block">召回积分奖励</label>
+        <input id="recall-points" type="number" value="200" 
+          class="w-full bg-gray-50 border-none rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-blue-300"/>
+      </div>
+    </div>
+  </section>
+
+  <!-- 活动参数调整 -->
+  <section class="bg-white rounded-xl shadow-sm p-6">
+    <h2 class="font-bold text-lg mb-4 flex items-center gap-2">
+      <span class="material-symbols-outlined text-primary">celebration</span>
+      活动参数调整
+    </h2>
+    <div class="space-y-4">
+      <div>
+        <label class="text-sm font-semibold text-secondary mb-2 block">节日活动积分倍率</label>
+        <input id="holiday-multiplier" type="number" step="0.1" value="2.0" 
+          class="w-full bg-gray-50 border-none rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-blue-300"/>
+      </div>
+
+      <div>
+        <label class="text-sm font-semibold text-secondary mb-2 block">满减活动门槛（元）</label>
+        <input id="discount-threshold" type="number" value="100" 
+          class="w-full bg-gray-50 border-none rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-blue-300"/>
+      </div>
+
+      <div>
+        <label class="text-sm font-semibold text-secondary mb-2 block">满减优惠金额（元）</label>
+        <input id="discount-amount" type="number" value="20" 
+          class="w-full bg-gray-50 border-none rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-blue-300"/>
+      </div>
+    </div>
+  </section>
+
+  <!-- 转正优惠策略 -->
+  <section class="bg-white rounded-xl shadow-sm p-6">
+    <h2 class="font-bold text-lg mb-4 flex items-center gap-2">
+      <span class="material-symbols-outlined text-primary">upgrade</span>
+      会员转正优惠
+    </h2>
+    <div class="space-y-4">
+      <div>
+        <label class="text-sm font-semibold text-secondary mb-2 block">转正所需订单数</label>
+        <input id="upgrade-orders" type="number" value="3" 
+          class="w-full bg-gray-50 border-none rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-blue-300"/>
+      </div>
+
+      <div>
+        <label class="text-sm font-semibold text-secondary mb-2 block">转正所需消费金额（元）</label>
+        <input id="upgrade-amount" type="number" value="500" 
+          class="w-full bg-gray-50 border-none rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-blue-300"/>
+      </div>
+
+      <div>
+        <label class="text-sm font-semibold text-secondary mb-2 block">转正奖励积分</label>
+        <input id="upgrade-bonus" type="number" value="500" 
+          class="w-full bg-gray-50 border-none rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-blue-300"/>
+      </div>
+    </div>
+  </section>
+
+  <!-- 保存按钮 -->
+  <div class="flex gap-3 pb-4">
+    <button onclick="saveConfig()" 
+      class="flex-1 bg-primary-container text-white font-bold py-4 rounded-xl shadow-md flex items-center justify-center gap-2 active:scale-[.98] transition-transform">
+      <span class="material-symbols-outlined text-xl">save</span>
+      保存所有配置
+    </button>
+  </div>
+
+  <!-- 提示信息 -->
+  <div id="save-result" class="hidden p-4 rounded-xl border text-sm font-semibold flex items-center gap-3"></div>
+
+</main>
+
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-2 py-2 bg-white border-t shadow-lg z-50" id="admin-bottom-nav"></nav>
+
+<script src="../db.js"></script>
+<script src="_nav.js"></script>
+<script>
+  DB.init();
+  checkAdminAuth();
+  renderAdminNav('config');
+
+  // 加载配置
+  function loadConfig() {
+    const config = JSON.parse(localStorage.getItem('system_config') || '{}');
+    
+    // 权益计算器配置
+    if (document.getElementById('avg-member-discount')) {
+      document.getElementById('avg-member-discount').value = config.avgMemberDiscount || 0.95;
+      document.getElementById('shipping-fee-per-order').value = config.shippingFeePerOrder || 8;
+      document.getElementById('avg-orders-per-year').value = config.avgOrdersPerYear || 12;
+      document.getElementById('return-insurance-per-year').value = config.returnInsurancePerYear || 50;
+      document.getElementById('member-yearly-price').value = config.memberYearlyPrice || 199;
+      document.getElementById('trial-limited-price').value = config.trialLimitedPrice || 169;
+      document.getElementById('trial-limited-hours').value = config.trialLimitedHours || 48;
+    }
+    
+    // 积分计算规则
+    document.getElementById('points-ratio').value = config.pointsRatio || 0.1;
+    document.getElementById('points-deduction').value = config.pointsDeduction || 0.01;
+    document.getElementById('max-deduction-ratio').value = config.maxDeductionRatio || 0.5;
+    
+    // 会员等级权益
+    document.getElementById('bronze-multiplier').value = config.bronzeMultiplier || 1.0;
+    document.getElementById('silver-multiplier').value = config.silverMultiplier || 1.2;
+    document.getElementById('gold-multiplier').value = config.goldMultiplier || 1.5;
+    document.getElementById('platinum-multiplier').value = config.platinumMultiplier || 2.0;
+    
+    // 新用户权益
+    document.getElementById('new-user-points').value = config.newUserPoints || 100;
+    document.getElementById('first-order-discount').value = config.firstOrderDiscount || 10;
+    document.getElementById('trial-days').value = config.trialDays || 7;
+    
+    // 流失召回
+    document.getElementById('churn-days').value = config.churnDays || 90;
+    document.getElementById('recall-coupon').value = config.recallCoupon || 20;
+    document.getElementById('recall-points').value = config.recallPoints || 200;
+    
+    // 活动参数
+    document.getElementById('holiday-multiplier').value = config.holidayMultiplier || 2.0;
+    document.getElementById('discount-threshold').value = config.discountThreshold || 100;
+    document.getElementById('discount-amount').value = config.discountAmount || 20;
+    
+    // 转正优惠
+    document.getElementById('upgrade-orders').value = config.upgradeOrders || 3;
+    document.getElementById('upgrade-amount').value = config.upgradeAmount || 500;
+    document.getElementById('upgrade-bonus').value = config.upgradeBonus || 500;
+  }
+
+  function saveConfig() {
+    const config = {
+      // 权益计算器配置
+      avgMemberDiscount: document.getElementById('avg-member-discount') ? parseFloat(document.getElementById('avg-member-discount').value) : 0.95,
+      shippingFeePerOrder: document.getElementById('shipping-fee-per-order') ? parseFloat(document.getElementById('shipping-fee-per-order').value) : 8,
+      avgOrdersPerYear: document.getElementById('avg-orders-per-year') ? parseInt(document.getElementById('avg-orders-per-year').value) : 12,
+      returnInsurancePerYear: document.getElementById('return-insurance-per-year') ? parseFloat(document.getElementById('return-insurance-per-year').value) : 50,
+      memberYearlyPrice: document.getElementById('member-yearly-price') ? parseFloat(document.getElementById('member-yearly-price').value) : 199,
+      trialLimitedPrice: document.getElementById('trial-limited-price') ? parseFloat(document.getElementById('trial-limited-price').value) : 169,
+      trialLimitedHours: document.getElementById('trial-limited-hours') ? parseInt(document.getElementById('trial-limited-hours').value) : 48,
+      
+      // 积分计算规则
+      pointsRatio: parseFloat(document.getElementById('points-ratio').value),
+      pointsDeduction: parseFloat(document.getElementById('points-deduction').value),
+      maxDeductionRatio: parseFloat(document.getElementById('max-deduction-ratio').value),
+      
+      // 会员等级权益
+      bronzeMultiplier: parseFloat(document.getElementById('bronze-multiplier').value),
+      silverMultiplier: parseFloat(document.getElementById('silver-multiplier').value),
+      goldMultiplier: parseFloat(document.getElementById('gold-multiplier').value),
+      platinumMultiplier: parseFloat(document.getElementById('platinum-multiplier').value),
+      
+      // 新用户权益
+      newUserPoints: parseInt(document.getElementById('new-user-points').value),
+      firstOrderDiscount: parseFloat(document.getElementById('first-order-discount').value),
+      trialDays: parseInt(document.getElementById('trial-days').value),
+      
+      // 流失召回
+      churnDays: parseInt(document.getElementById('churn-days').value),
+      recallCoupon: parseFloat(document.getElementById('recall-coupon').value),
+      recallPoints: parseInt(document.getElementById('recall-points').value),
+      
+      // 活动参数
+      holidayMultiplier: parseFloat(document.getElementById('holiday-multiplier').value),
+      discountThreshold: parseFloat(document.getElementById('discount-threshold').value),
+      discountAmount: parseFloat(document.getElementById('discount-amount').value),
+      
+      // 转正优惠
+      upgradeOrders: parseInt(document.getElementById('upgrade-orders').value),
+      upgradeAmount: parseFloat(document.getElementById('upgrade-amount').value),
+      upgradeBonus: parseInt(document.getElementById('upgrade-bonus').value),
+      
+      updatedAt: new Date().toISOString()
+    };
+
+    localStorage.setItem('system_config', JSON.stringify(config));
+
+    const result = document.getElementById('save-result');
+    result.classList.remove('hidden');
+    result.className = 'p-4 rounded-xl border border-green-200 bg-green-50 text-green-700 text-sm font-semibold flex items-center gap-3';
+    result.innerHTML = '<span class="material-symbols-outlined text-2xl" style="font-variation-settings:\'FILL\' 1,\'wght\' 500">check_circle</span><p>配置保存成功！</p>';
+    
+    setTimeout(() => result.classList.add('hidden'), 3000);
+  }
+
+  loadConfig();
+</script>
+</body>
+</html>

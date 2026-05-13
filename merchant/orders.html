@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>订单管理 - Merchant Hub</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script>tailwind.config={theme:{extend:{colors:{"primary":"#a04100","primary-container":"#ff6b00","on-primary":"#ffffff","on-primary-container":"#572000","surface":"#f9f9f9","on-surface":"#1a1c1c","secondary":"#5f5e5e","on-surface-variant":"#5a4136","surface-container-low":"#f3f3f3","surface-container-lowest":"#ffffff","outline-variant":"#e2bfb0","outline":"#8e7164","error":"#ba1a1a","error-container":"#ffdad6","on-error-container":"#93000a","tertiary":"#8c5000","tertiary-fixed":"#ffdcbf","on-tertiary-fixed-variant":"#6a3b00"}}}}</script>
+<style>
+  body{font-family:'Work Sans',sans-serif;background:#f9f9f9;min-height:100dvh;}
+  .material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;}
+  .hide-scroll::-webkit-scrollbar{display:none;}
+</style>
+</head>
+<body class="bg-surface text-on-surface">
+
+<!-- Header -->
+<header class="sticky top-0 z-50 bg-white shadow-[0_2px_12px_rgba(0,0,0,0.06)] flex justify-between items-center px-4 h-16">
+  <div class="flex items-center gap-3">
+    <button onclick="document.getElementById('drawer').classList.toggle('hidden')" class="md:hidden p-2 rounded-full hover:bg-gray-100">
+      <span class="material-symbols-outlined text-primary">menu</span>
+    </button>
+    <h1 class="font-black text-primary text-lg" style="font-family:'Plus Jakarta Sans',sans-serif" id="merchant-header-name">Merchant Hub</h1>
+  </div>
+  <div class="flex items-center gap-3">
+    <button id="lang-toggle" onclick="I18N.toggle()" class="w-9 h-9 rounded-full bg-orange-50 border border-orange-200 text-primary font-bold text-xs">EN</button>
+    
+    <!-- 头像下拉菜单 -->
+    <div class="relative">
+      <button onclick="toggleProfileMenu()" class="w-9 h-9 rounded-full bg-gradient-to-br from-orange-400 to-amber-600 flex items-center justify-center text-white font-bold shadow-sm hover:shadow-md transition-shadow">
+        <span class="material-symbols-outlined text-xl">person</span>
+      </button>
+      
+      <!-- 下拉菜单 -->
+      <div id="profile-menu" class="hidden absolute right-0 top-12 w-48 bg-white rounded-xl shadow-xl border border-orange-50 py-2 z-50">
+        <div class="px-4 py-3 border-b border-gray-100">
+          <p id="menu-merchant-name" class="font-bold text-sm text-on-surface">商家管理员</p>
+          <p id="menu-store-name" class="text-xs text-secondary mt-0.5">Amber Roast Coffee</p>
+        </div>
+        <a href="store.html" class="flex items-center gap-3 px-4 py-2.5 hover:bg-orange-50 transition-colors text-sm text-on-surface">
+          <span class="material-symbols-outlined text-xl text-primary">storefront</span>
+          <span data-zh="店铺管理" data-en="Store Settings">店铺管理</span>
+        </a>
+        <a href="account.html" class="flex items-center gap-3 px-4 py-2.5 hover:bg-orange-50 transition-colors text-sm text-on-surface">
+          <span class="material-symbols-outlined text-xl text-secondary">settings</span>
+          <span data-zh="账号设置" data-en="Account Settings">账号设置</span>
+        </a>
+        <div class="border-t border-gray-100 mt-1 pt-1">
+          <a href="login.html" onclick="sessionStorage.clear();localStorage.removeItem('merchant_id')" class="flex items-center gap-3 px-4 py-2.5 hover:bg-red-50 transition-colors text-sm text-red-600">
+            <span class="material-symbols-outlined text-xl">logout</span>
+            <span data-zh="退出登录" data-en="Sign Out">退出登录</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="flex min-h-[calc(100dvh-64px)]">
+  <!-- 侧边栏 -->
+  <aside id="merchant-aside" class="hidden md:flex flex-col w-60 bg-white border-r border-orange-50 p-4 fixed left-0 top-16 bottom-0 overflow-y-auto"></aside>
+
+  <!-- 移动端抽屉 -->
+  <div id="drawer" class="hidden fixed inset-0 z-40 md:hidden">
+    <div class="absolute inset-0 bg-black/30" onclick="document.getElementById('drawer').classList.add('hidden')"></div>
+    <aside class="absolute left-0 top-0 bottom-0 w-64 bg-white p-4 shadow-xl" id="merchant-aside-mobile"></aside>
+  </div>
+
+  <!-- 主内容 -->
+  <main class="flex-1 md:ml-60 pb-24 md:pb-8">
+    <!-- 筛选标签 -->
+    <div class="sticky top-16 bg-white z-30 px-4 py-3 border-b border-orange-50 shadow-sm">
+      <div class="flex gap-2 overflow-x-auto hide-scroll">
+        <button onclick="filterOrders('all')" id="tab-all"
+          class="tab-btn whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-bold bg-orange-100 text-primary-container">
+          <span data-zh="全部" data-en="All">全部</span>
+        </button>
+        <button onclick="filterOrders('pending_ship')" id="tab-pending_ship"
+          class="tab-btn whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-bold bg-gray-100 text-secondary">
+          <span data-zh="待发货" data-en="To Ship">待发货</span>
+        </button>
+        <button onclick="filterOrders('paid')" id="tab-paid"
+          class="tab-btn whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-bold bg-gray-100 text-secondary">
+          <span data-zh="待付款" data-en="Pending">待付款</span>
+        </button>
+        <button onclick="filterOrders('completed')" id="tab-completed"
+          class="tab-btn whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-bold bg-gray-100 text-secondary">
+          <span data-zh="已完成" data-en="Completed">已完成</span>
+        </button>
+        <button onclick="filterOrders('refunding')" id="tab-refunding"
+          class="tab-btn whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-bold bg-gray-100 text-secondary">
+          <span data-zh="退款中" data-en="Refunding">退款中</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 统计卡片 -->
+    <div class="p-4 grid grid-cols-3 gap-3">
+      <div class="bg-white p-3 rounded-xl shadow-[0_2px_12px_rgba(0,0,0,0.05)] flex items-center gap-3">
+        <div class="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center">
+          <span class="material-symbols-outlined text-primary-container text-xl">pending_actions</span>
+        </div>
+        <div>
+          <p class="text-xs text-secondary" data-zh="待处理" data-en="Pending">待处理</p>
+          <p id="stat-pending" class="text-xl font-black text-primary" style="font-family:'Plus Jakarta Sans',sans-serif">0</p>
+        </div>
+      </div>
+      <div class="bg-white p-3 rounded-xl shadow-[0_2px_12px_rgba(0,0,0,0.05)] flex items-center gap-3">
+        <div class="w-10 h-10 rounded-full bg-amber-50 flex items-center justify-center">
+          <span class="material-symbols-outlined text-tertiary text-xl">monitoring</span>
+        </div>
+        <div>
+          <p class="text-xs text-secondary" data-zh="今日销售" data-en="Today Sales">今日销售</p>
+          <p id="stat-sales" class="text-xl font-black text-on-surface" style="font-family:'Plus Jakarta Sans',sans-serif">¥0</p>
+        </div>
+      </div>
+      <div class="bg-white p-3 rounded-xl shadow-[0_2px_12px_rgba(0,0,0,0.05)] flex items-center gap-3">
+        <div class="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center">
+          <span class="material-symbols-outlined text-secondary text-xl">group</span>
+        </div>
+        <div>
+          <p class="text-xs text-secondary" data-zh="今日新客" data-en="New Customers">今日新客</p>
+          <p id="stat-new" class="text-xl font-black text-on-surface" style="font-family:'Plus Jakarta Sans',sans-serif">0</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 订单列表 -->
+    <div id="order-list" class="px-4 flex flex-col gap-3"></div>
+  </main>
+</div>
+
+<!-- 底部导航 (移动端) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full flex justify-around items-center px-2 py-2 bg-white/95 backdrop-blur border-t border-orange-50 shadow-lg z-50" id="merchant-bottom-nav"></nav>
+
+<!-- 状态标签模板 -->
+<template id="status-tpl">
+  <span class="px-2 py-0.5 rounded text-xs font-bold"></span>
+</template>
+
+<script src="../db.js"></script>
+<script src="_nav.js"></script>
+<script>
+  DB.init();
+  checkMerchantAuth();
+  I18N.applyAll();
+  renderMerchantNav('orders');
+
+  // 移动端抽屉也渲染导航
+  const mobileAside = document.getElementById('merchant-aside-mobile');
+  if (mobileAside) mobileAside.innerHTML = document.getElementById('merchant-aside').innerHTML;
+
+  const STATUS_MAP = {
+    pending_payment: { zh:'待付款', en:'Pending Payment', cls:'bg-gray-100 text-secondary' },
+    paid:            { zh:'已付款', en:'Paid',            cls:'bg-blue-50 text-blue-600' },
+    pending_ship:    { zh:'待发货', en:'To Ship',         cls:'bg-amber-50 text-amber-700' },
+    shipped:         { zh:'已发货', en:'Shipped',         cls:'bg-green-50 text-green-700' },
+    completed:       { zh:'已完成', en:'Completed',       cls:'bg-green-100 text-green-800' },
+    refunding:       { zh:'退款中', en:'Refunding',       cls:'bg-red-50 text-red-600' },
+    refunded:        { zh:'已退款', en:'Refunded',        cls:'bg-gray-100 text-secondary' },
+    cancelled:       { zh:'已取消', en:'Cancelled',       cls:'bg-gray-100 text-secondary' },
+  };
+
+  let currentFilter = 'all';
+
+  function filterOrders(status) {
+    currentFilter = status;
+    document.querySelectorAll('.tab-btn').forEach(b => {
+      b.className = 'tab-btn whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-bold bg-gray-100 text-secondary';
+    });
+    const active = document.getElementById('tab-' + status);
+    if (active) active.className = 'tab-btn whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-bold bg-orange-100 text-primary-container';
+    renderOrders();
+  }
+
+  function renderOrders() {
+    const m = DB.getCurrentMerchant();
+    let orders = DB.findWhere('orders', r => r.merchant_id === m.id);
+    if (currentFilter !== 'all') orders = orders.filter(o => o.status === currentFilter);
+    orders.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+
+    // 统计
+    const pending = orders.filter(o => ['pending_ship','paid'].includes(o.status)).length;
+    const todaySales = orders.filter(o => o.status !== 'cancelled').reduce((s,o) => s + o.total_amount, 0);
+    document.getElementById('stat-pending').textContent = pending;
+    document.getElementById('stat-sales').textContent = '¥' + todaySales.toLocaleString();
+    document.getElementById('stat-new').textContent = orders.length;
+
+    const list = document.getElementById('order-list');
+    if (!orders.length) {
+      list.innerHTML = `<div class="text-center py-16 text-secondary">
+        <span class="material-symbols-outlined text-5xl text-gray-200">receipt_long</span>
+        <p class="mt-2 text-sm" data-zh="暂无订单" data-en="No orders">${I18N.t('暂无订单','No orders')}</p>
+      </div>`;
+      return;
+    }
+
+    list.innerHTML = orders.map(order => {
+      const items = DB.findWhere('order_items', r => r.order_id === order.id);
+      const st = STATUS_MAP[order.status] || { zh: order.status, en: order.status, cls:'bg-gray-100 text-secondary' };
+      const stLabel = I18N.t(st.zh, st.en);
+      const user = DB.findById('users', order.user_id);
+      const userName = user ? (user.nickname || user.phone) : '-';
+
+      const actionBtns = {
+        pending_ship: `<button onclick="shipOrder(${order.id})" class="px-4 py-2 rounded-xl bg-primary-container text-white text-xs font-bold shadow active:scale-95 transition-transform">${I18N.t('立即发货','Ship Now')}</button>`,
+        shipped:      `<button class="px-4 py-2 rounded-xl border border-outline text-secondary text-xs font-bold">${I18N.t('查看物流','Track')}</button>`,
+        refunding:    `
+          <button onclick="refundOrder(${order.id},false)" class="px-4 py-2 rounded-xl border border-red-300 text-red-500 text-xs font-bold">${I18N.t('拒绝','Reject')}</button>
+          <button onclick="refundOrder(${order.id},true)" class="px-4 py-2 rounded-xl bg-red-500 text-white text-xs font-bold">${I18N.t('同意退款','Approve')}</button>`,
+        completed:    `<span class="text-xs text-green-600 font-semibold">${I18N.t('已完成','Completed')}</span>`,
+      };
+
+      return `
+      <div class="bg-white rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.05)] overflow-hidden border border-orange-50">
+        <div class="px-4 py-3 flex justify-between items-center border-b border-gray-50">
+          <div class="flex items-center gap-2">
+            <span class="text-xs text-secondary">${I18N.t('订单号:','Order:')}</span>
+            <span class="text-xs font-bold text-on-surface">${order.order_no}</span>
+          </div>
+          <span class="px-2 py-0.5 rounded text-xs font-bold ${st.cls}">${stLabel}</span>
+        </div>
+        ${items.map(item => `
+        <div class="p-4 flex gap-3">
+          <img src="${item.image||'https://via.placeholder.com/80'}" class="w-16 h-16 rounded-xl object-cover flex-shrink-0"/>
+          <div class="flex-1 min-w-0">
+            <p class="font-semibold text-sm text-on-surface truncate">${item.name_zh}</p>
+            ${item.spec ? `<p class="text-xs text-secondary mt-0.5">${item.spec}</p>` : ''}
+            <div class="flex justify-between items-end mt-2">
+              <p class="font-black text-primary text-base" style="font-family:'Plus Jakarta Sans',sans-serif">¥${item.price.toLocaleString()} <span class="text-xs text-secondary font-normal">x${item.quantity}</span></p>
+              <p class="text-xs text-secondary">${I18N.t('买家:','Buyer:')} ${userName}</p>
+            </div>
+          </div>
+        </div>`).join('')}
+        <div class="px-4 py-3 bg-gray-50 flex justify-between items-center">
+          <p class="text-xs text-secondary">${I18N.t('合计:','Total:')} <span class="font-bold text-on-surface">¥${order.total_amount.toLocaleString()}</span>
+            ${order.points_used > 0 ? `<span class="ml-2 text-amber-600">${I18N.t('积分抵扣','Points used')}: ${order.points_used}</span>` : ''}
+          </p>
+          <div class="flex gap-2">${actionBtns[order.status] || ''}</div>
+        </div>
+      </div>`;
+    }).join('');
+
+    I18N.applyAll();
+  }
+
+  function shipOrder(orderId) {
+    DB.update('orders', orderId, { status: 'shipped' });
+    renderOrders();
+  }
+
+  function refundOrder(orderId, approve) {
+    DB.update('orders', orderId, { status: approve ? 'refunded' : 'completed' });
+    renderOrders();
+  }
+
+  renderOrders();
+
+  function toggleProfileMenu() {
+    const menu = document.getElementById('profile-menu');
+    menu.classList.toggle('hidden');
+  }
+
+  // 点击其他地方关闭菜单
+  document.addEventListener('click', function(e) {
+    const menu = document.getElementById('profile-menu');
+    const button = e.target.closest('button[onclick="toggleProfileMenu()"]');
+    if (!button && !menu.contains(e.target)) {
+      menu.classList.add('hidden');
+    }
+  });
+
+  // 更新菜单中的商家信息
+  const m = DB.getCurrentMerchant();
+  if (m) {
+    document.getElementById('menu-merchant-name').textContent = m.name;
+    document.getElementById('menu-store-name').textContent = m.store_name;
+  }
+</script>
+</body>
+</html>

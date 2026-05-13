@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>收货地址 - 振华商城</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script>tailwind.config={theme:{extend:{colors:{"primary":"#a04100","primary-container":"#ff6b00","on-primary":"#ffffff","surface":"#f9f9f9","on-surface":"#1a1c1c","secondary":"#5f5e5e"}}}}</script>
+<style>
+  body{font-family:'Work Sans',sans-serif;background:#f9f9f9;min-height:100dvh;}
+  .material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;}
+</style>
+</head>
+<body class="bg-surface text-on-surface pb-24">
+
+<!-- Header -->
+<header class="sticky top-0 z-50 bg-white/95 backdrop-blur shadow-sm flex justify-between items-center px-4 py-3">
+  <button onclick="history.back()" class="p-1">
+    <span class="material-symbols-outlined text-primary">arrow_back</span>
+  </button>
+  <h1 class="flex-1 text-center font-bold text-on-surface" data-zh="收货地址" data-en="Addresses">收货地址</h1>
+  <button id="lang-toggle" onclick="I18N.toggle()" class="w-8 h-8 rounded-full bg-orange-50 border border-orange-200 text-primary font-bold text-xs">EN</button>
+</header>
+
+<main class="px-4 pt-4 pb-4 space-y-3">
+  <!-- 地址列表 -->
+  <div id="address-list"></div>
+
+  <!-- 添加新地址按钮 -->
+  <button onclick="showAddressForm()" class="w-full bg-white border-2 border-dashed border-orange-200 rounded-2xl p-4 flex items-center justify-center gap-2 text-primary hover:bg-orange-50 transition-colors">
+    <span class="material-symbols-outlined">add</span>
+    <span class="font-bold text-sm" data-zh="添加新地址" data-en="Add New Address">添加新地址</span>
+  </button>
+</main>
+
+<!-- 地址表单模态框 -->
+<div id="address-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-end">
+  <div class="bg-white w-full rounded-t-3xl p-6 max-h-[90vh] overflow-y-auto">
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="font-bold text-lg" id="modal-title" data-zh="添加地址" data-en="Add Address">添加地址</h2>
+      <button onclick="closeAddressForm()" class="p-1">
+        <span class="material-symbols-outlined text-secondary">close</span>
+      </button>
+    </div>
+
+    <form id="address-form" class="space-y-4">
+      <input type="hidden" id="address-id" value="">
+      
+      <div>
+        <label class="block text-sm font-semibold text-on-surface mb-2" data-zh="收货人" data-en="Name">收货人</label>
+        <input type="text" id="name" required class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-primary focus:ring-1 focus:ring-primary" data-ph-zh="请输入收货人姓名" data-ph-en="Enter recipient name" placeholder="请输入收货人姓名"/>
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold text-on-surface mb-2" data-zh="手机号码" data-en="Phone">手机号码</label>
+        <input type="tel" id="phone" required pattern="[0-9]{11}" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-primary focus:ring-1 focus:ring-primary" data-ph-zh="请输入11位手机号" data-ph-en="Enter phone number" placeholder="请输入11位手机号"/>
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold text-on-surface mb-2" data-zh="所在地区" data-en="Region">所在地区</label>
+        <div class="grid grid-cols-3 gap-2">
+          <select id="province" required class="px-3 py-3 rounded-xl border border-gray-200 focus:border-primary focus:ring-1 focus:ring-primary text-sm">
+            <option value="">请选择省份</option>
+          </select>
+          <select id="city" required class="px-3 py-3 rounded-xl border border-gray-200 focus:border-primary focus:ring-1 focus:ring-primary text-sm">
+            <option value="">请选择城市</option>
+          </select>
+          <select id="district" required class="px-3 py-3 rounded-xl border border-gray-200 focus:border-primary focus:ring-1 focus:ring-primary text-sm">
+            <option value="">请选择区县</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold text-on-surface mb-2" data-zh="详细地址" data-en="Detail Address">详细地址</label>
+        <textarea id="detail" required rows="3" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-primary focus:ring-1 focus:ring-primary resize-none" data-ph-zh="街道、楼牌号等详细信息" data-ph-en="Street, building number, etc." placeholder="街道、楼牌号等详细信息"></textarea>
+      </div>
+
+      <div class="flex items-center gap-2 p-4 bg-orange-50 rounded-xl">
+        <input type="checkbox" id="is-default" class="w-5 h-5 rounded text-primary focus:ring-primary"/>
+        <label for="is-default" class="text-sm font-semibold text-on-surface cursor-pointer" data-zh="设为默认地址" data-en="Set as default">设为默认地址</label>
+      </div>
+
+      <button type="submit" class="w-full bg-primary-container text-white font-bold py-3 rounded-xl active:scale-95 transition-transform">
+        <span data-zh="保存地址" data-en="Save Address">保存地址</span>
+      </button>
+    </form>
+  </div>
+</div>
+
+<script src="../data/regions.js"></script>
+<script src="../db.js"></script>
+<script src="_nav.js"></script>
+<script>
+  DB.init();
+  I18N.applyAll();
+  
+  const user = DB.getCurrentUser();
+  if (!user) {
+    window.location.href = 'login.html';
+  }
+
+  let editingAddressId = null;
+  const regionsData = REGIONS_DATA; // 使用全局变量
+
+  // 初始化省份选择器
+  function initProvinceSelect() {
+    const provinceSelect = document.getElementById('province');
+    provinceSelect.innerHTML = '<option value="">请选择省份</option>' + 
+      regionsData.map(p => `<option value="${p.name}">${p.name}</option>`).join('');
+  }
+
+  // 页面加载时初始化
+  initProvinceSelect();
+
+  // 省份改变时更新城市
+  document.getElementById('province').addEventListener('change', function() {
+    const provinceName = this.value;
+    const citySelect = document.getElementById('city');
+    const districtSelect = document.getElementById('district');
+    
+    // 清空城市和区县
+    citySelect.innerHTML = '<option value="">请选择城市</option>';
+    districtSelect.innerHTML = '<option value="">请选择区县</option>';
+    
+    if (!provinceName) return;
+    
+    const province = regionsData.find(p => p.name === provinceName);
+    if (province && province.cities) {
+      citySelect.innerHTML = '<option value="">请选择城市</option>' + 
+        province.cities.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
+    }
+  });
+
+  // 城市改变时更新区县
+  document.getElementById('city').addEventListener('change', function() {
+    const provinceName = document.getElementById('province').value;
+    const cityName = this.value;
+    const districtSelect = document.getElementById('district');
+    
+    // 清空区县
+    districtSelect.innerHTML = '<option value="">请选择区县</option>';
+    
+    if (!provinceName || !cityName) return;
+    
+    const province = regionsData.find(p => p.name === provinceName);
+    if (province) {
+      const city = province.cities.find(c => c.name === cityName);
+      if (city && city.districts) {
+        districtSelect.innerHTML = '<option value="">请选择区县</option>' + 
+          city.districts.map(d => `<option value="${d}">${d}</option>`).join('');
+      }
+    }
+  });
+
+  // 加载地址列表
+  function loadAddresses() {
+    const addresses = DB.findWhere('addresses', a => a.user_id === user.id);
+    const addressList = document.getElementById('address-list');
+    
+    if (addresses.length === 0) {
+      addressList.innerHTML = `
+        <div class="text-center py-16">
+          <span class="material-symbols-outlined text-6xl text-gray-200">location_off</span>
+          <p class="text-secondary text-sm mt-3">${I18N.t('暂无收货地址', 'No addresses yet')}</p>
+        </div>
+      `;
+      return;
+    }
+
+    addressList.innerHTML = addresses.map(addr => `
+      <div class="bg-white rounded-2xl p-4 shadow-sm border ${addr.is_default ? 'border-primary' : 'border-orange-50'}">
+        <div class="flex items-start justify-between mb-3">
+          <div class="flex-1">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="font-bold text-on-surface">${addr.name}</span>
+              <span class="text-secondary text-sm">${addr.phone}</span>
+              ${addr.is_default ? `<span class="bg-primary text-white text-xs px-2 py-0.5 rounded-full font-bold">${I18N.t('默认', 'Default')}</span>` : ''}
+            </div>
+            <p class="text-sm text-secondary">
+              ${addr.province} ${addr.city} ${addr.district}
+            </p>
+            <p class="text-sm text-on-surface mt-1">${addr.detail}</p>
+          </div>
+          <button onclick="deleteAddress(${addr.id})" class="p-1 text-red-500">
+            <span class="material-symbols-outlined text-xl">delete</span>
+          </button>
+        </div>
+        <div class="flex gap-2 pt-3 border-t border-gray-100">
+          <button onclick="editAddress(${addr.id})" class="flex-1 py-2 text-sm font-semibold text-primary border border-primary rounded-lg active:scale-95 transition-transform">
+            ${I18N.t('编辑', 'Edit')}
+          </button>
+          ${!addr.is_default ? `
+            <button onclick="setDefault(${addr.id})" class="flex-1 py-2 text-sm font-semibold text-white bg-primary-container rounded-lg active:scale-95 transition-transform">
+              ${I18N.t('设为默认', 'Set Default')}
+            </button>
+          ` : ''}
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // 显示地址表单
+  function showAddressForm(addressId = null) {
+    const modal = document.getElementById('address-modal');
+    const form = document.getElementById('address-form');
+    const modalTitle = document.getElementById('modal-title');
+    
+    editingAddressId = addressId;
+    
+    if (addressId) {
+      // 编辑模式
+      const addr = DB.findById('addresses', addressId);
+      if (addr) {
+        document.getElementById('address-id').value = addr.id;
+        document.getElementById('name').value = addr.name;
+        document.getElementById('phone').value = addr.phone;
+        document.getElementById('detail').value = addr.detail;
+        document.getElementById('is-default').checked = addr.is_default;
+        
+        // 回填省市区（需要触发联动）
+        setTimeout(() => {
+          // 设置省份
+          document.getElementById('province').value = addr.province;
+          // 触发省份change事件以加载城市
+          const provinceEvent = new Event('change');
+          document.getElementById('province').dispatchEvent(provinceEvent);
+          
+          // 等待城市加载后设置城市
+          setTimeout(() => {
+            document.getElementById('city').value = addr.city;
+            // 触发城市change事件以加载区县
+            const cityEvent = new Event('change');
+            document.getElementById('city').dispatchEvent(cityEvent);
+            
+            // 等待区县加载后设置区县
+            setTimeout(() => {
+              document.getElementById('district').value = addr.district;
+            }, 50);
+          }, 50);
+        }, 50);
+        
+        modalTitle.textContent = I18N.t('编辑地址', 'Edit Address');
+      }
+    } else {
+      // 新增模式
+      form.reset();
+      modalTitle.textContent = I18N.t('添加地址', 'Add Address');
+    }
+    
+    modal.classList.remove('hidden');
+    I18N.applyAll();
+  }
+
+  // 关闭地址表单
+  function closeAddressForm() {
+    document.getElementById('address-modal').classList.add('hidden');
+    document.getElementById('address-form').reset();
+    editingAddressId = null;
+  }
+
+  // 编辑地址
+  function editAddress(id) {
+    showAddressForm(id);
+  }
+
+  // 设置默认地址
+  function setDefault(id) {
+    // 取消其他默认地址
+    const addresses = DB.findWhere('addresses', a => a.user_id === user.id);
+    addresses.forEach(addr => {
+      if (addr.is_default) {
+        DB.update('addresses', addr.id, { is_default: false });
+      }
+    });
+    
+    // 设置新的默认地址
+    DB.update('addresses', id, { is_default: true });
+    loadAddresses();
+  }
+
+  // 删除地址
+  function deleteAddress(id) {
+    if (confirm(I18N.t('确定要删除这个地址吗？', 'Delete this address?'))) {
+      DB.remove('addresses', id);
+      loadAddresses();
+    }
+  }
+
+  // 提交表单
+  document.getElementById('address-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const addressData = {
+      user_id: user.id,
+      name: document.getElementById('name').value,
+      phone: document.getElementById('phone').value,
+      province: document.getElementById('province').value,
+      city: document.getElementById('city').value,
+      district: document.getElementById('district').value,
+      detail: document.getElementById('detail').value,
+      is_default: document.getElementById('is-default').checked
+    };
+
+    // 如果设为默认，取消其他默认地址
+    if (addressData.is_default) {
+      const addresses = DB.findWhere('addresses', a => a.user_id === user.id);
+      addresses.forEach(addr => {
+        if (addr.is_default && addr.id !== editingAddressId) {
+          DB.update('addresses', addr.id, { is_default: false });
+        }
+      });
+    }
+
+    if (editingAddressId) {
+      // 更新地址
+      DB.update('addresses', editingAddressId, addressData);
+    } else {
+      // 新增地址
+      DB.insert('addresses', addressData);
+    }
+
+    closeAddressForm();
+    loadAddresses();
+  });
+
+  // 初始加载
+  loadAddresses();
+</script>
+</body>
+</html>

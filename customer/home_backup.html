@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>首页 - 振华商城</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script>tailwind.config={theme:{extend:{colors:{"primary":"#a04100","primary-container":"#ff6b00","on-primary":"#ffffff","on-primary-container":"#572000","surface":"#f9f9f9","on-surface":"#1a1c1c","secondary":"#5f5e5e","on-surface-variant":"#5a4136","surface-container-low":"#f3f3f3","surface-container-lowest":"#ffffff","outline-variant":"#e2bfb0","tertiary":"#8c5000","error":"#ba1a1a"}}}}</script>
+<style>
+  body{font-family:'Work Sans',sans-serif;background:#f9f9f9;min-height:100dvh;}
+  .material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;}
+  .hide-scroll::-webkit-scrollbar{display:none;}
+</style>
+</head>
+<body class="bg-surface text-on-surface pb-24">
+
+<!-- Header -->
+<header class="sticky top-0 z-50 bg-white/95 backdrop-blur shadow-[0_2px_12px_rgba(0,0,0,0.06)] flex justify-between items-center px-4 py-3">
+  <button class="p-1"><span class="material-symbols-outlined text-primary">menu</span></button>
+  <h1 class="font-black text-primary text-xl" style="font-family:'Plus Jakarta Sans',sans-serif" data-zh="振华商城" data-en="Vibrant Store">振华商城</h1>
+  <div class="flex items-center gap-2">
+    <button id="lang-toggle" onclick="I18N.toggle()" class="w-8 h-8 rounded-full bg-orange-50 border border-orange-200 text-primary font-bold text-xs">EN</button>
+    <button onclick="location.href='cart.html'" class="relative p-1">
+      <span class="material-symbols-outlined text-primary text-2xl" style="font-variation-settings:'FILL' 1,'wght' 500">shopping_cart</span>
+      <span id="cart-badge" class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold">0</span>
+    </button>
+  </div>
+</header>
+
+<main class="px-4 space-y-5 mt-4">
+  <!-- 搜索栏 -->
+  <div class="flex items-center bg-white rounded-2xl px-4 py-3 border border-orange-50 shadow-sm gap-3">
+    <span class="material-symbols-outlined text-secondary text-xl">search</span>
+    <input type="text" class="bg-transparent border-none focus:ring-0 w-full text-sm text-on-surface"
+      data-ph-zh="搜索商品..." data-ph-en="Search products..." placeholder="搜索商品..."/>
+    <span class="material-symbols-outlined text-secondary text-xl">photo_camera</span>
+  </div>
+
+  <!-- 红包横幅 -->
+  <section class="relative overflow-hidden rounded-2xl bg-primary-container p-5 shadow-lg shadow-orange-200">
+    <div class="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
+    <div class="relative z-10 flex justify-between items-center">
+      <div>
+        <h2 class="font-bold text-white text-base" data-zh="平台红包" data-en="Platform Rewards">平台红包</h2>
+        <p class="text-white/80 text-xs mt-0.5" data-zh="专属购物奖励" data-en="Exclusive Shopping Rewards">专属购物奖励</p>
+        <div class="flex items-baseline mt-2 gap-1">
+          <span class="font-black text-white text-2xl" style="font-family:'Plus Jakarta Sans',sans-serif">¥50</span>
+          <span class="text-white/80 text-xs" data-zh="下单立减" data-en="Off next order">下单立减</span>
+        </div>
+      </div>
+      <button class="bg-white text-primary-container px-4 py-2 rounded-xl font-bold text-sm active:scale-95 transition-transform shadow-md">
+        <span data-zh="立即领取" data-en="Claim Now">立即领取</span>
+      </button>
+    </div>
+    <div class="absolute right-4 bottom-0 opacity-10">
+      <span class="material-symbols-outlined text-white text-8xl" style="font-variation-settings:'FILL' 1,'wght' 500">redeem</span>
+    </div>
+  </section>
+
+  <!-- 积分展示 (登录后) -->
+  <div id="points-banner" class="hidden bg-amber-50 border border-amber-100 rounded-2xl p-4 flex items-center gap-3">
+    <div class="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">
+      <span class="material-symbols-outlined text-amber-600 text-xl" style="font-variation-settings:'FILL' 1,'wght' 500">stars</span>
+    </div>
+    <div class="flex-1">
+      <p class="text-xs text-amber-700 font-semibold" data-zh="我的积分" data-en="My Points">我的积分</p>
+      <p id="user-points" class="font-black text-amber-800 text-lg" style="font-family:'Plus Jakarta Sans',sans-serif">0</p>
+    </div>
+    <a href="profile.html" class="text-xs text-amber-600 font-bold flex items-center gap-0.5">
+      <span data-zh="去使用" data-en="Use Now">去使用</span>
+      <span class="material-symbols-outlined text-sm">chevron_right</span>
+    </a>
+  </div>
+
+  <!-- 分类入口 -->
+  <section class="grid grid-cols-2 gap-3">
+    <a href="categories.html?type=delivery" class="bg-white p-4 rounded-2xl shadow-sm border border-orange-50 flex flex-col items-center gap-2 active:scale-95 transition-transform">
+      <div class="w-12 h-12 bg-orange-50 rounded-full flex items-center justify-center">
+        <span class="material-symbols-outlined text-primary-container text-2xl" style="font-variation-settings:'FILL' 1,'wght' 500">local_shipping</span>
+      </div>
+      <span class="font-bold text-sm text-on-surface" data-zh="快递产品" data-en="Delivery">快递产品</span>
+      <span class="text-xs text-secondary" data-zh="全国配送" data-en="Nationwide">全国配送</span>
+    </a>
+    <a href="stores.html" class="bg-white p-4 rounded-2xl shadow-sm border border-orange-50 flex flex-col items-center gap-2 active:scale-95 transition-transform">
+      <div class="w-12 h-12 bg-amber-50 rounded-full flex items-center justify-center">
+        <span class="material-symbols-outlined text-tertiary text-2xl" style="font-variation-settings:'FILL' 1,'wght' 500">storefront</span>
+      </div>
+      <span class="font-bold text-sm text-on-surface" data-zh="到店产品" data-en="In-Store">到店产品</span>
+      <span class="text-xs text-secondary" data-zh="到店自取" data-en="Pickup">到店自取</span>
+    </a>
+  </section>
+
+  <!-- 推荐商品 -->
+  <section class="space-y-3">
+    <div class="flex justify-between items-center">
+      <h3 class="font-bold text-on-surface" data-zh="为你推荐" data-en="Recommended">为你推荐</h3>
+      <a href="categories.html" class="text-xs font-bold text-primary flex items-center gap-0.5">
+        <span data-zh="查看全部" data-en="View All">查看全部</span>
+        <span class="material-symbols-outlined text-sm">chevron_right</span>
+      </a>
+    </div>
+    <div id="product-grid" class="grid grid-cols-2 gap-3"></div>
+  </section>
+</main>
+
+<!-- 底部导航 -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-2 py-2 bg-white/95 backdrop-blur border-t border-orange-50 shadow-lg z-50" id="customer-bottom-nav"></nav>
+
+<script src="../db.js"></script>
+<script src="_nav.js"></script>
+<script>
+  DB.init();
+  I18N.applyAll();
+  
+  console.log('页面开始加载');
+  console.log('sessionStorage user_id:', sessionStorage.getItem('user_id'));
+  
+  // 检查登录状态
+  const authResult = checkAuth();
+  console.log('认证结果:', authResult);
+  if (!authResult) return;
+  
+  console.log('开始渲染页面内容');
+  
+  // 先简单测试导航
+  const navElement = document.getElementById('customer-bottom-nav');
+  if (!navElement) {
+    console.error('找不到导航元素');
+  } else {
+    console.log('找到导航元素，开始渲染');
+    navElement.innerHTML = `
+      <a href="home.html" class="flex flex-col items-center py-2 text-orange-500">
+        <span class="material-symbols-outlined text-2xl">home</span>
+        <span class="text-xs">首页</span>
+      </a>
+      <a href="categories.html" class="flex flex-col items-center py-2 text-gray-500">
+        <span class="material-symbols-outlined text-2xl">category</span>
+        <span class="text-xs">分类</span>
+      </a>
+      <a href="stores.html" class="flex flex-col items-center py-2 text-gray-500">
+        <span class="material-symbols-outlined text-2xl">storefront</span>
+        <span class="text-xs">周边</span>
+      </a>
+      <a href="profile.html" class="flex flex-col items-center py-2 text-gray-500">
+        <span class="material-symbols-outlined text-2xl">person</span>
+        <span class="text-xs">我的</span>
+      </a>
+    `;
+    console.log('导航渲染完成');
+  }
+  
+  updateCartBadge();
+
+  // 积分展示
+  const u = DB.getCurrentUser();
+  if (u) {
+    document.getElementById('points-banner').classList.remove('hidden');
+    document.getElementById('user-points').textContent = u.points.toLocaleString();
+  }
+
+  // 渲染商品 - 从数据库动态加载
+  const productGrid = document.getElementById('product-grid');
+  if (!productGrid) return;
+  
+  const products = DB.findAll('products').filter(p => p.status === 'on_sale').slice(0, 6);
+  
+  if (products.length === 0) {
+    productGrid.innerHTML = '<div class="col-span-2 text-center py-8 text-gray-500">暂无商品</div>';
+  } else {
+    productGrid.innerHTML = products.map(p => `
+    <div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-orange-50">
+      <div class="aspect-square bg-gray-100">
+        <img src="https://images.unsplash.com/photo-1549007994-cb92caebd54b?w=400" class="w-full h-full object-cover" alt="巧克力"/>
+      </div>
+      <div class="p-3">
+        <p class="text-xs font-bold text-gray-800">手工艺术巧克力礼盒</p>
+        <div class="flex justify-between items-center mt-2">
+          <span class="font-bold text-orange-600">¥258</span>
+          <button class="w-7 h-7 bg-orange-500 rounded text-white text-sm">+</button>
+        </div>
+      </div>
+    </div>
+    <div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-orange-50">
+      <div class="aspect-square bg-gray-100">
+        <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400" class="w-full h-full object-cover" alt="耳机"/>
+      </div>
+      <div class="p-3">
+        <p class="text-xs font-bold text-gray-800">Pro 降噪蓝牙耳机</p>
+        <div class="flex justify-between items-center mt-2">
+          <span class="font-bold text-orange-600">¥1299</span>
+          <button class="w-7 h-7 bg-orange-500 rounded text-white text-sm">+</button>
+        </div>
+      </div>
+    </div>
+    <div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-orange-50">
+      <div class="aspect-square bg-gray-100">
+        <img src="https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=400" class="w-full h-full object-cover" alt="包包"/>
+      </div>
+      <div class="p-3">
+        <p class="text-xs font-bold text-gray-800">简约牛皮单肩包</p>
+        <div class="flex justify-between items-center mt-2">
+          <span class="font-bold text-orange-600">¥899</span>
+          <button class="w-7 h-7 bg-orange-500 rounded text-white text-sm">+</button>
+        </div>
+      </div>
+    </div>
+    <div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-orange-50">
+      <div class="aspect-square bg-gray-100">
+        <img src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400" class="w-full h-full object-cover" alt="手表"/>
+      </div>
+      <div class="p-3">
+        <p class="text-xs font-bold text-gray-800">智能健康手表</p>
+        <div class="flex justify-between items-center mt-2">
+          <span class="font-bold text-orange-600">¥1299</span>
+          <button class="w-7 h-7 bg-orange-500 rounded text-white text-sm">+</button>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  if (products.length === 0) {
+    console.log('没有找到商品数据，显示提示信息');
+    // productGrid.innerHTML += '<div class="col-span-2 text-center py-8">暂无商品数据</div>';
+  } else {
+    try {
+      productGrid.innerHTML = products.map(p => `
+        <div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-orange-50">
+          <div class="aspect-square bg-gray-100">
+            <img src="${p.image || 'https://via.placeholder.com/200'}" class="w-full h-full object-cover" alt="${p.name_zh}"/>
+          </div>
+          <div class="p-3">
+            <p class="text-xs font-bold text-gray-800">${p.name_zh}</p>
+            <div class="flex justify-between items-center mt-2">
+              <span class="font-bold text-orange-600">¥${p.price}</span>
+              <button class="w-7 h-7 bg-orange-500 rounded text-white text-sm">+</button>
+            </div>
+          </div>
+        </div>`).join('');
+      console.log('商品渲染完成');
+    } catch (error) {
+      console.error('商品渲染出错:', error);
+      productGrid.innerHTML = '<div class="col-span-2 text-center py-8 text-red-500">商品加载出错</div>';
+    }
+  }
+
+  function addCart(productId) {
+    let user = DB.getCurrentUser();
+    if (!user) {
+      // 快速游客登录
+      const guestPhone = 'guest_' + Date.now();
+      user = DB.registerUser(guestPhone, 'guest123', I18N.t('游客用户', 'Guest User'));
+    }
+    DB.addToCart(user.id, productId);
+    updateCartBadge();
+    // 简单反馈
+    const btn = event.target.closest('button');
+    btn.classList.add('bg-green-500');
+    setTimeout(() => btn.classList.remove('bg-green-500'), 600);
+  }
+</script>
+</body>
+</html>

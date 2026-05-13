@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>下单成功 - 振华商城</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script>tailwind.config={theme:{extend:{colors:{"primary":"#a04100","primary-container":"#ff6b00","on-primary":"#ffffff","on-primary-container":"#572000","surface":"#f9f9f9","on-surface":"#1a1c1c","secondary":"#5f5e5e","surface-container-low":"#f3f3f3","surface-container-lowest":"#ffffff","outline-variant":"#e2bfb0"}}}}</script>
+<style>
+  body{font-family:'Work Sans',sans-serif;background:#f9f9f9;min-height:100dvh;}
+  .material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;}
+  @keyframes pop{0%{transform:scale(.5);opacity:0}70%{transform:scale(1.1)}100%{transform:scale(1);opacity:1}}
+  .pop{animation:pop .4s ease-out forwards;}
+</style>
+</head>
+<body class="bg-surface flex flex-col items-center justify-center min-h-screen px-4">
+
+<div class="w-full max-w-sm text-center space-y-6">
+  <!-- 成功图标 -->
+  <div class="pop w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+    <span class="material-symbols-outlined text-green-600 text-5xl" style="font-variation-settings:'FILL' 1,'wght' 600">check_circle</span>
+  </div>
+
+  <div>
+    <h1 class="text-3xl font-black text-on-surface" style="font-family:'Plus Jakarta Sans',sans-serif" data-zh="下单成功！" data-en="Order Placed!">下单成功！</h1>
+    <p class="text-secondary text-sm mt-2" data-zh="请保存核销码，到店出示使用" data-en="Save your verification code for in-store use">请保存核销码，到店出示使用</p>
+  </div>
+
+  <!-- 核销码卡片 -->
+  <div class="bg-white rounded-2xl p-6 shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-orange-50">
+    <p class="text-xs text-secondary mb-3" data-zh="您的核销码" data-en="Your Verification Code">您的核销码</p>
+    <!-- QR 码 (SVG 模拟) -->
+    <div class="w-40 h-40 mx-auto bg-gray-50 rounded-xl border border-gray-100 flex items-center justify-center mb-3">
+      <svg viewBox="0 0 100 100" class="w-32 h-32">
+        <!-- 简化 QR 图案 -->
+        <rect x="10" y="10" width="30" height="30" fill="none" stroke="#1a1c1c" stroke-width="4"/>
+        <rect x="17" y="17" width="16" height="16" fill="#1a1c1c"/>
+        <rect x="60" y="10" width="30" height="30" fill="none" stroke="#1a1c1c" stroke-width="4"/>
+        <rect x="67" y="17" width="16" height="16" fill="#1a1c1c"/>
+        <rect x="10" y="60" width="30" height="30" fill="none" stroke="#1a1c1c" stroke-width="4"/>
+        <rect x="17" y="67" width="16" height="16" fill="#1a1c1c"/>
+        <rect x="45" y="10" width="8" height="8" fill="#1a1c1c"/>
+        <rect x="45" y="22" width="8" height="8" fill="#1a1c1c"/>
+        <rect x="45" y="34" width="8" height="8" fill="#1a1c1c"/>
+        <rect x="60" y="45" width="8" height="8" fill="#1a1c1c"/>
+        <rect x="72" y="45" width="8" height="8" fill="#1a1c1c"/>
+        <rect x="84" y="45" width="8" height="8" fill="#1a1c1c"/>
+        <rect x="45" y="60" width="8" height="8" fill="#1a1c1c"/>
+        <rect x="57" y="60" width="8" height="8" fill="#1a1c1c"/>
+        <rect x="45" y="72" width="8" height="8" fill="#1a1c1c"/>
+        <rect x="69" y="72" width="8" height="8" fill="#1a1c1c"/>
+        <rect x="45" y="84" width="8" height="8" fill="#1a1c1c"/>
+        <rect x="57" y="84" width="8" height="8" fill="#1a1c1c"/>
+        <rect x="81" y="84" width="8" height="8" fill="#1a1c1c"/>
+      </svg>
+    </div>
+    <p id="coupon-code" class="font-mono font-bold text-on-surface text-sm tracking-widest"></p>
+    <p id="order-no" class="text-xs text-secondary mt-1"></p>
+
+    <!-- 积分获得 -->
+    <div id="points-earned-box" class="hidden mt-4 bg-amber-50 rounded-xl p-3 flex items-center gap-2">
+      <span class="material-symbols-outlined text-amber-600 text-xl" style="font-variation-settings:'FILL' 1,'wght' 500">stars</span>
+      <p id="points-earned-text" class="text-sm font-bold text-amber-800"></p>
+    </div>
+  </div>
+
+  <!-- 操作按钮 -->
+  <div class="flex flex-col gap-3">
+    <a href="profile.html?show=orders" class="w-full py-3.5 bg-primary-container text-white font-bold rounded-xl shadow-md shadow-orange-200 active:scale-95 transition-transform text-sm">
+      <span data-zh="查看我的订单" data-en="View My Orders">查看我的订单</span>
+    </a>
+    <a href="home.html" class="w-full py-3.5 border-2 border-orange-200 text-primary font-bold rounded-xl text-sm active:scale-95 transition-transform">
+      <span data-zh="继续购物" data-en="Continue Shopping">继续购物</span>
+    </a>
+  </div>
+</div>
+
+<script src="../db.js"></script>
+<script>
+  DB.init();
+  const lang = localStorage.getItem('lang') || 'zh';
+  document.querySelectorAll('[data-zh]').forEach(el => {
+    el.textContent = lang === 'zh' ? el.dataset.zh : (el.dataset.en || el.dataset.zh);
+  });
+
+  const orderNo = new URLSearchParams(location.search).get('order');
+  if (orderNo) {
+    const order = DB.findWhere('orders', r => r.order_no === orderNo)[0];
+    if (order) {
+      document.getElementById('coupon-code').textContent = order.coupon_code;
+      document.getElementById('order-no').textContent = (lang === 'zh' ? '订单号: ' : 'Order: ') + order.order_no;
+      if (order.points_earned > 0) {
+        const box = document.getElementById('points-earned-box');
+        box.classList.remove('hidden');
+        document.getElementById('points-earned-text').textContent =
+          lang === 'zh' ? '本次获得 +' + order.points_earned + ' 积分' : 'Earned +' + order.points_earned + ' points';
+      }
+    }
+  }
+</script>
+</body>
+</html>

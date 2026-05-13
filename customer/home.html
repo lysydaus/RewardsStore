@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>首页 - 振华商城</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script>tailwind.config={theme:{extend:{colors:{"primary":"#a04100","primary-container":"#ff6b00","on-primary":"#ffffff","on-primary-container":"#572000","surface":"#f9f9f9","on-surface":"#1a1c1c","secondary":"#5f5e5e","on-surface-variant":"#5a4136","surface-container-low":"#f3f3f3","surface-container-lowest":"#ffffff","outline-variant":"#e2bfb0","tertiary":"#8c5000","error":"#ba1a1a"}}}}</script>
+<style>
+  body{font-family:'Work Sans',sans-serif;background:#f9f9f9;min-height:100dvh;}
+  .material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;}
+  .hide-scroll::-webkit-scrollbar{display:none;}
+  /* 防止页面闪烁 - 在样式加载前隐藏body */
+  body { visibility: hidden; }
+  body.loaded { visibility: visible; }
+</style>
+<script>
+  // 页面加载完成后显示内容
+  window.addEventListener('DOMContentLoaded', function() {
+    document.body.classList.add('loaded');
+  });
+</script>
+</head>
+<body class="bg-surface text-on-surface pb-24">
+
+<!-- Header -->
+<header class="sticky top-0 z-50 bg-white/95 backdrop-blur shadow-[0_2px_12px_rgba(0,0,0,0.06)] flex justify-between items-center px-4 py-3">
+  <button onclick="toggleMenu()" class="p-1 relative">
+    <span class="material-symbols-outlined text-primary">menu</span>
+  </button>
+  <h1 class="font-black text-primary text-xl" style="font-family:'Plus Jakarta Sans',sans-serif" data-zh="振华商城" data-en="Vibrant Store">振华商城</h1>
+  <div class="flex items-center gap-2">
+    <button id="lang-toggle" onclick="I18N.toggle()" class="w-8 h-8 rounded-full bg-orange-50 border border-orange-200 text-primary font-bold text-xs">EN</button>
+    <button onclick="location.href='cart.html'" class="relative p-1">
+      <span class="material-symbols-outlined text-primary text-2xl" style="font-variation-settings:'FILL' 1,'wght' 500">shopping_cart</span>
+      <span id="cart-badge" class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold">0</span>
+    </button>
+  </div>
+</header>
+
+<!-- 下拉菜单 -->
+<div id="dropdown-menu" class="hidden fixed top-14 left-4 z-50 bg-white rounded-xl shadow-lg border border-orange-50 overflow-hidden min-w-[160px]">
+  <a href="profile.html" class="w-full flex items-center gap-3 px-4 py-3 hover:bg-orange-50 transition-colors">
+    <span class="material-symbols-outlined text-primary">person</span>
+    <span class="text-on-surface font-medium text-sm" data-zh="个人中心" data-en="Profile">个人中心</span>
+  </a>
+  <a href="addresses.html" class="w-full flex items-center gap-3 px-4 py-3 hover:bg-orange-50 transition-colors">
+    <span class="material-symbols-outlined text-primary">location_on</span>
+    <span class="text-on-surface font-medium text-sm" data-zh="收货地址" data-en="Addresses">收货地址</span>
+  </a>
+  <a href="payments.html" class="w-full flex items-center gap-3 px-4 py-3 hover:bg-orange-50 transition-colors">
+    <span class="material-symbols-outlined text-primary">credit_card</span>
+    <span class="text-on-surface font-medium text-sm" data-zh="支付方式" data-en="Payments">支付方式</span>
+  </a>
+</div>
+
+<main class="px-4 space-y-5 mt-4">
+  <!-- 搜索栏 -->
+  <div class="flex items-center bg-white rounded-2xl px-4 py-3 border border-orange-50 shadow-sm gap-3">
+    <span class="material-symbols-outlined text-secondary text-xl">search</span>
+    <input id="search-input" type="text" oninput="handleSearch()" class="bg-transparent border-none focus:ring-0 w-full text-sm text-on-surface"
+      data-ph-zh="搜索商品..." data-ph-en="Search products..." placeholder="搜索商品..."/>
+    <button onclick="clearSearch()" id="clear-search" class="hidden">
+      <span class="material-symbols-outlined text-secondary text-xl">close</span>
+    </button>
+    <span class="material-symbols-outlined text-secondary text-xl">photo_camera</span>
+  </div>
+
+  <!-- 搜索结果 -->
+  <div id="search-results" class="hidden">
+    <div class="flex justify-between items-center mb-3">
+      <h3 class="font-bold text-on-surface text-sm" data-zh="搜索结果" data-en="Search Results">搜索结果</h3>
+      <span id="search-count" class="text-xs text-secondary">0 件商品</span>
+    </div>
+    <div id="search-grid" class="grid grid-cols-2 gap-3"></div>
+  </div>
+
+  <!-- 红包横幅 -->
+  <section class="relative overflow-hidden rounded-2xl bg-primary-container p-5 shadow-lg shadow-orange-200">
+    <div class="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
+    <div class="relative z-10 flex justify-between items-center">
+      <div>
+        <h2 class="font-bold text-white text-base" data-zh="平台红包" data-en="Platform Rewards">平台红包</h2>
+        <p class="text-white/80 text-xs mt-0.5" data-zh="专属购物奖励" data-en="Exclusive Shopping Rewards">专属购物奖励</p>
+        <div class="flex items-baseline mt-2 gap-1">
+          <span class="font-black text-white text-2xl" style="font-family:'Plus Jakarta Sans',sans-serif">¥50</span>
+          <span class="text-white/80 text-xs" data-zh="下单立减" data-en="Off next order">下单立减</span>
+        </div>
+      </div>
+      <button onclick="claimCoupon()" id="claim-coupon-btn" class="bg-white text-primary-container px-4 py-2 rounded-xl font-bold text-sm active:scale-95 transition-transform shadow-md">
+        <span data-zh="立即领取" data-en="Claim Now">立即领取</span>
+      </button>
+    </div>
+    <div class="absolute right-4 bottom-0 opacity-10">
+      <span class="material-symbols-outlined text-white text-8xl" style="font-variation-settings:'FILL' 1,'wght' 500">redeem</span>
+    </div>
+  </section>
+
+  <!-- 积分展示 (登录后) -->
+  <div id="points-banner" class="hidden bg-amber-50 border border-amber-100 rounded-2xl p-4 flex items-center gap-3">
+    <div class="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">
+      <span class="material-symbols-outlined text-amber-600 text-xl" style="font-variation-settings:'FILL' 1,'wght' 500">stars</span>
+    </div>
+    <div class="flex-1">
+      <p class="text-xs text-amber-700 font-semibold" data-zh="我的积分" data-en="My Points">我的积分</p>
+      <p id="user-points" class="font-black text-amber-800 text-lg" style="font-family:'Plus Jakarta Sans',sans-serif">0</p>
+    </div>
+    <a href="profile.html" class="text-xs text-amber-600 font-bold flex items-center gap-0.5">
+      <span data-zh="去使用" data-en="Use Now">去使用</span>
+      <span class="material-symbols-outlined text-sm">chevron_right</span>
+    </a>
+  </div>
+
+  <!-- 分类入口 -->
+  <section class="grid grid-cols-2 gap-3">
+    <a href="categories.html?type=delivery" class="bg-white p-4 rounded-2xl shadow-sm border border-orange-50 flex flex-col items-center gap-2 active:scale-95 transition-transform">
+      <div class="w-12 h-12 bg-orange-50 rounded-full flex items-center justify-center">
+        <span class="material-symbols-outlined text-primary-container text-2xl" style="font-variation-settings:'FILL' 1,'wght' 500">local_shipping</span>
+      </div>
+      <span class="font-bold text-sm text-on-surface" data-zh="快递产品" data-en="Delivery">快递产品</span>
+      <span class="text-xs text-secondary" data-zh="全国配送" data-en="Nationwide">全国配送</span>
+    </a>
+    <a href="stores.html" class="bg-white p-4 rounded-2xl shadow-sm border border-orange-50 flex flex-col items-center gap-2 active:scale-95 transition-transform">
+      <div class="w-12 h-12 bg-amber-50 rounded-full flex items-center justify-center">
+        <span class="material-symbols-outlined text-tertiary text-2xl" style="font-variation-settings:'FILL' 1,'wght' 500">storefront</span>
+      </div>
+      <span class="font-bold text-sm text-on-surface" data-zh="到店产品" data-en="In-Store">到店产品</span>
+      <span class="text-xs text-secondary" data-zh="到店自取" data-en="Pickup">到店自取</span>
+    </a>
+  </section>
+
+  <!-- 推荐商品 -->
+  <section id="recommended-section" class="space-y-3">
+    <div class="flex justify-between items-center">
+      <h3 class="font-bold text-on-surface" data-zh="为你推荐" data-en="Recommended">为你推荐</h3>
+      <a href="categories.html" class="text-xs font-bold text-primary flex items-center gap-0.5">
+        <span data-zh="查看全部" data-en="View All">查看全部</span>
+        <span class="material-symbols-outlined text-sm">chevron_right</span>
+      </a>
+    </div>
+    <div id="product-grid" class="grid grid-cols-2 gap-3"></div>
+  </section>
+</main>
+
+<!-- 底部导航 -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-2 py-2 bg-white/95 backdrop-blur border-t border-orange-50 shadow-lg z-50" id="customer-bottom-nav"></nav>
+
+<script src="../db.js"></script>
+<script src="_nav.js"></script>
+<script src="_message_banner.js"></script>
+<script>
+  DB.init();
+  I18N.applyAll();
+  
+  // 检查登录状态（不阻止页面渲染）
+  const user = DB.getCurrentUser();
+  if (!user) {
+    // 未登录则跳转到登录页
+    window.location.href = 'login.html';
+  }
+  
+  // 渲染导航
+  const navElement = document.getElementById('customer-bottom-nav');
+  if (navElement) {
+    navElement.innerHTML = `
+      <a href="home.html" class="flex flex-col items-center py-2 text-orange-500">
+        <span class="material-symbols-outlined text-2xl" style="font-variation-settings:'FILL' 1,'wght' 600">home</span>
+        <span class="text-xs font-semibold">首页</span>
+      </a>
+      <a href="categories.html" class="flex flex-col items-center py-2 text-gray-500">
+        <span class="material-symbols-outlined text-2xl">category</span>
+        <span class="text-xs">分类</span>
+      </a>
+      <a href="stores.html" class="flex flex-col items-center py-2 text-gray-500">
+        <span class="material-symbols-outlined text-2xl">storefront</span>
+        <span class="text-xs">周边</span>
+      </a>
+      <a href="profile.html" class="flex flex-col items-center py-2 text-gray-500">
+        <span class="material-symbols-outlined text-2xl">person</span>
+        <span class="text-xs">我的</span>
+      </a>
+    `;
+  }
+  
+  updateCartBadge();
+
+  // 积分展示
+  if (user) {
+    document.getElementById('points-banner').classList.remove('hidden');
+    document.getElementById('user-points').textContent = user.points.toLocaleString();
+  }
+
+  // 渲染商品 - 从数据库动态加载
+  const productGrid = document.getElementById('product-grid');
+  if (productGrid) {
+    const products = DB.findAll('products').filter(p => p.status === 'on_sale').slice(0, 6);
+    
+    if (products.length === 0) {
+      productGrid.innerHTML = '<div class="col-span-2 text-center py-8 text-gray-500">暂无商品</div>';
+    } else {
+      productGrid.innerHTML = products.map(p => `
+        <a href="product.html?id=${p.id}" class="bg-white rounded-2xl overflow-hidden shadow-sm border border-orange-50 flex flex-col active:scale-95 transition-transform">
+          <div class="relative aspect-square bg-gray-100">
+            <img src="${p.image || 'https://via.placeholder.com/200'}" class="w-full h-full object-cover" alt="${p.name_zh}"/>
+            ${p.stock <= 5 ? `<div class="absolute top-2 left-2 bg-red-500/90 text-white text-[9px] px-2 py-0.5 rounded-full font-bold">仅剩${p.stock}</div>` : ''}
+            ${p.points_reward > 0 ? `<div class="absolute top-2 right-2 bg-amber-400/90 text-white text-[9px] px-2 py-0.5 rounded-full font-bold">+${p.points_reward}分</div>` : ''}
+          </div>
+          <div class="p-3 flex flex-col flex-grow">
+            <p class="text-xs font-bold text-on-surface line-clamp-2 flex-grow">${p.name_zh}</p>
+            <div class="flex justify-between items-center mt-2">
+              <span class="font-black text-primary text-base">¥${p.price}</span>
+              <button onclick="event.preventDefault();addCart(${p.id})" class="w-7 h-7 bg-primary-container rounded-lg flex items-center justify-center text-white active:scale-90 transition-transform">
+                <span class="material-symbols-outlined text-base">add</span>
+              </button>
+            </div>
+          </div>
+        </a>
+      `).join('');
+    }
+  }
+
+  function claimCoupon() {
+    const currentUser = DB.getCurrentUser();
+    if (!currentUser) {
+      alert(I18N.t('请先登录', 'Please login first'));
+      window.location.href = 'login.html';
+      return;
+    }
+
+    // 检查今天是否已领取
+    const today = new Date().toDateString();
+    const lastClaim = localStorage.getItem('last_coupon_claim_' + currentUser.id);
+    
+    if (lastClaim === today) {
+      alert(I18N.t('今天已经领取过了，明天再来吧！', 'Already claimed today, come back tomorrow!'));
+      return;
+    }
+
+    // 领取红包：增加50积分
+    const newPoints = currentUser.points + 50;
+    DB.update('users', currentUser.id, { points: newPoints });
+    
+    // 记录领取时间
+    localStorage.setItem('last_coupon_claim_' + currentUser.id, today);
+    
+    // 更新页面显示
+    if (user) {
+      user.points = newPoints;
+      document.getElementById('user-points').textContent = newPoints.toLocaleString();
+    }
+    
+    // 显示成功提示
+    const btn = document.getElementById('claim-coupon-btn');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<span class="material-symbols-outlined text-base">check</span> ' + I18N.t('已领取', 'Claimed');
+    btn.disabled = true;
+    btn.classList.add('opacity-50');
+    
+    alert(I18N.t('恭喜！获得50积分红包', 'Congratulations! You got 50 points!'));
+    
+    setTimeout(() => {
+      btn.innerHTML = originalText;
+      btn.disabled = false;
+      btn.classList.remove('opacity-50');
+      I18N.applyAll();
+    }, 3000);
+  }
+
+  function addCart(productId) {
+    let currentUser = DB.getCurrentUser();
+    console.log('添加到购物车 - 用户:', currentUser);
+    console.log('添加到购物车 - 商品ID:', productId);
+    if (!currentUser) {
+      const guestPhone = 'guest_' + Date.now();
+      currentUser = DB.registerUser(guestPhone, 'guest123', '游客用户');
+      console.log('创建游客用户:', currentUser);
+    }
+    const result = DB.addToCart(currentUser.id, productId);
+    console.log('添加结果:', result);
+    updateCartBadge();
+    const btn = event.target.closest('button');
+    btn.classList.add('bg-green-500');
+    setTimeout(() => btn.classList.remove('bg-green-500'), 600);
+  }
+
+  // 搜索功能
+  let searchTimeout;
+  function handleSearch() {
+    const input = document.getElementById('search-input');
+    const keyword = input.value.trim();
+    const clearBtn = document.getElementById('clear-search');
+    const searchResults = document.getElementById('search-results');
+    const recommendedSection = document.getElementById('recommended-section');
+    const searchGrid = document.getElementById('search-grid');
+    const searchCount = document.getElementById('search-count');
+    
+    // 显示/隐藏清除按钮
+    clearBtn.classList.toggle('hidden', keyword === '');
+    
+    // 清除之前的延迟
+    clearTimeout(searchTimeout);
+    
+    if (keyword === '') {
+      // 没有搜索词，显示推荐商品
+      searchResults.classList.add('hidden');
+      recommendedSection.classList.remove('hidden');
+      return;
+    }
+    
+    // 延迟搜索，避免频繁查询
+    searchTimeout = setTimeout(() => {
+      // 搜索商品
+      const allProducts = DB.findAll('products').filter(p => p.status === 'on_sale');
+      const results = allProducts.filter(p => 
+        p.name_zh.toLowerCase().includes(keyword.toLowerCase()) ||
+        p.name_en.toLowerCase().includes(keyword.toLowerCase()) ||
+        (p.description_zh && p.description_zh.toLowerCase().includes(keyword.toLowerCase())) ||
+        (p.sku && p.sku.toLowerCase().includes(keyword.toLowerCase()))
+      );
+      
+      // 显示搜索结果
+      searchResults.classList.remove('hidden');
+      recommendedSection.classList.add('hidden');
+      
+      // 更新计数
+      searchCount.textContent = I18N.t(`${results.length} 件商品`, `${results.length} items`);
+      
+      if (results.length === 0) {
+        searchGrid.innerHTML = `
+          <div class="col-span-2 text-center py-10">
+            <span class="material-symbols-outlined text-6xl text-gray-200">search_off</span>
+            <p class="text-secondary text-sm mt-3">${I18N.t('未找到相关商品', 'No products found')}</p>
+          </div>
+        `;
+      } else {
+        searchGrid.innerHTML = results.map(p => `
+          <a href="product.html?id=${p.id}" class="bg-white rounded-2xl overflow-hidden shadow-sm border border-orange-50 flex flex-col active:scale-95 transition-transform">
+            <div class="relative aspect-square bg-gray-100">
+              <img src="${p.image || 'https://via.placeholder.com/200'}" class="w-full h-full object-cover" alt="${p.name_zh}"/>
+              ${p.stock <= 5 ? `<div class="absolute top-2 left-2 bg-red-500/90 text-white text-[9px] px-2 py-0.5 rounded-full font-bold">${I18N.t('仅剩','Only')}${p.stock}</div>` : ''}
+              ${p.points_reward > 0 ? `<div class="absolute top-2 right-2 bg-amber-400/90 text-white text-[9px] px-2 py-0.5 rounded-full font-bold">+${p.points_reward}${I18N.t('分','pts')}</div>` : ''}
+            </div>
+            <div class="p-3 flex flex-col flex-grow">
+              <p class="text-xs font-bold text-on-surface line-clamp-2 flex-grow">${p.name_zh}</p>
+              <div class="flex justify-between items-center mt-2">
+                <span class="font-black text-primary text-base">¥${p.price}</span>
+                <button onclick="event.preventDefault();addCart(${p.id})" class="w-7 h-7 bg-primary-container rounded-lg flex items-center justify-center text-white active:scale-90 transition-transform">
+                  <span class="material-symbols-outlined text-base">add</span>
+                </button>
+              </div>
+            </div>
+          </a>
+        `).join('');
+      }
+      
+      I18N.applyAll();
+    }, 300); // 300ms延迟
+  }
+
+  function clearSearch() {
+    const input = document.getElementById('search-input');
+    input.value = '';
+    handleSearch();
+    input.focus();
+  }
+</script>
+</body>
+</html>

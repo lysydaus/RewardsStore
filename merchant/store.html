@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>店铺管理 - Merchant Hub</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script>tailwind.config={theme:{extend:{colors:{"primary":"#a04100","primary-container":"#ff6b00","on-primary":"#ffffff","on-primary-container":"#572000","surface":"#f9f9f9","on-surface":"#1a1c1c","secondary":"#5f5e5e","on-surface-variant":"#5a4136","surface-container-low":"#f3f3f3","surface-container-lowest":"#ffffff","outline-variant":"#e2bfb0","error":"#ba1a1a","error-container":"#ffdad6","on-error-container":"#93000a"}}}}</script>
+<style>
+  body{font-family:'Work Sans',sans-serif;background:#f9f9f9;min-height:100dvh;}
+  .material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;}
+</style>
+</head>
+<body class="bg-surface text-on-surface">
+
+<header class="sticky top-0 z-50 bg-white shadow-[0_2px_12px_rgba(0,0,0,0.06)] flex justify-between items-center px-4 h-16">
+  <div class="flex items-center gap-3">
+    <button onclick="document.getElementById('drawer').classList.toggle('hidden')" class="md:hidden p-2 rounded-full hover:bg-gray-100">
+      <span class="material-symbols-outlined text-primary">menu</span>
+    </button>
+    <h1 class="font-black text-primary text-lg" style="font-family:'Plus Jakarta Sans',sans-serif" id="merchant-header-name">Merchant Hub</h1>
+  </div>
+  <div class="flex items-center gap-3">
+    <button id="lang-toggle" onclick="I18N.toggle()" class="w-9 h-9 rounded-full bg-orange-50 border border-orange-200 text-primary font-bold text-xs">EN</button>
+    
+    <!-- 头像下拉菜单 -->
+    <div class="relative">
+      <button onclick="toggleProfileMenu()" class="w-9 h-9 rounded-full bg-gradient-to-br from-orange-400 to-amber-600 flex items-center justify-center text-white font-bold shadow-sm hover:shadow-md transition-shadow">
+        <span class="material-symbols-outlined text-xl">person</span>
+      </button>
+      
+      <!-- 下拉菜单 -->
+      <div id="profile-menu" class="hidden absolute right-0 top-12 w-48 bg-white rounded-xl shadow-xl border border-orange-50 py-2 z-50">
+        <div class="px-4 py-3 border-b border-gray-100">
+          <p id="menu-merchant-name" class="font-bold text-sm text-on-surface">商家管理员</p>
+          <p id="menu-store-name" class="text-xs text-secondary mt-0.5">Amber Roast Coffee</p>
+        </div>
+        <a href="store.html" class="flex items-center gap-3 px-4 py-2.5 hover:bg-orange-50 transition-colors text-sm text-on-surface">
+          <span class="material-symbols-outlined text-xl text-primary">storefront</span>
+          <span data-zh="店铺管理" data-en="Store Settings">店铺管理</span>
+        </a>
+        <a href="account.html" class="flex items-center gap-3 px-4 py-2.5 hover:bg-orange-50 transition-colors text-sm text-on-surface">
+          <span class="material-symbols-outlined text-xl text-secondary">settings</span>
+          <span data-zh="账号设置" data-en="Account Settings">账号设置</span>
+        </a>
+        <div class="border-t border-gray-100 mt-1 pt-1">
+          <a href="login.html" onclick="sessionStorage.clear();localStorage.removeItem('merchant_id')" class="flex items-center gap-3 px-4 py-2.5 hover:bg-red-50 transition-colors text-sm text-red-600">
+            <span class="material-symbols-outlined text-xl">logout</span>
+            <span data-zh="退出登录" data-en="Sign Out">退出登录</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="flex min-h-[calc(100dvh-64px)]">
+  <aside id="merchant-aside" class="hidden md:flex flex-col w-60 bg-white border-r border-orange-50 p-4 fixed left-0 top-16 bottom-0 overflow-y-auto"></aside>
+
+  <div id="drawer" class="hidden fixed inset-0 z-40 md:hidden">
+    <div class="absolute inset-0 bg-black/30" onclick="document.getElementById('drawer').classList.add('hidden')"></div>
+    <aside class="absolute left-0 top-0 bottom-0 w-64 bg-white p-4 shadow-xl" id="merchant-aside-mobile"></aside>
+  </div>
+
+  <main class="flex-1 md:ml-60 pb-24 md:pb-8 p-4">
+    <div class="max-w-3xl mx-auto space-y-6">
+
+      <!-- 页面标题 -->
+      <div>
+        <h2 class="text-3xl font-black text-on-surface" style="font-family:'Plus Jakarta Sans',sans-serif" data-zh="店铺管理" data-en="Store Management">店铺管理</h2>
+        <p class="text-secondary text-sm mt-1" data-zh="编辑店铺信息和营业设置" data-en="Edit store information and settings">编辑店铺信息和营业设置</p>
+      </div>
+
+      <!-- 店铺封面 -->
+      <section class="bg-white rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.05)] overflow-hidden">
+        <div class="relative h-48 bg-gradient-to-br from-orange-400 to-amber-600">
+          <img id="cover-preview" src="" class="w-full h-full object-cover hidden"/>
+          <div class="absolute inset-0 bg-black/20"></div>
+          <button onclick="document.getElementById('cover-input').click()" 
+            class="absolute bottom-4 right-4 bg-white/90 backdrop-blur px-4 py-2 rounded-xl text-sm font-bold text-on-surface flex items-center gap-2 shadow-lg hover:bg-white transition-colors">
+            <span class="material-symbols-outlined text-xl">photo_camera</span>
+            <span data-zh="更换封面" data-en="Change Cover">更换封面</span>
+          </button>
+          <input type="file" id="cover-input" accept="image/*" class="hidden" onchange="previewCover(event)"/>
+        </div>
+      </section>
+
+      <!-- 基本信息 -->
+      <section class="bg-white rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.05)] p-6">
+        <h3 class="font-bold text-on-surface mb-4 flex items-center gap-2">
+          <span class="material-symbols-outlined text-primary">info</span>
+          <span data-zh="基本信息" data-en="Basic Information">基本信息</span>
+        </h3>
+        <form id="store-form" class="space-y-4">
+          <div>
+            <label class="text-xs font-semibold text-secondary mb-1 block" data-zh="店铺名称" data-en="Store Name">店铺名称</label>
+            <input id="f-name" type="text" required 
+              class="w-full bg-gray-50 border-none rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-orange-300" 
+              data-ph-zh="店铺名称" data-ph-en="Store name" placeholder="店铺名称"/>
+          </div>
+
+          <div>
+            <label class="text-xs font-semibold text-secondary mb-1 block" data-zh="店铺分类" data-en="Category">店铺分类</label>
+            <select id="f-category" 
+              class="w-full bg-gray-50 border-none rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-orange-300">
+              <option value="Coffee">咖啡茶饮 Coffee & Tea</option>
+              <option value="Bakery">烘焙 Bakery</option>
+              <option value="Supermarket">超市 Supermarket</option>
+              <option value="Electronics">数码 Electronics</option>
+              <option value="Fashion">时尚 Fashion</option>
+              <option value="Beauty">美容 Beauty</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="text-xs font-semibold text-secondary mb-1 block" data-zh="店铺介绍" data-en="Description">店铺介绍</label>
+            <textarea id="f-description" rows="3" 
+              class="w-full bg-gray-50 border-none rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-orange-300 resize-none" 
+              data-ph-zh="介绍您的店铺..." data-ph-en="Describe your store..." placeholder="介绍您的店铺..."></textarea>
+          </div>
+
+          <div>
+            <label class="text-xs font-semibold text-secondary mb-1 block" data-zh="店铺地址" data-en="Address">店铺地址</label>
+            <input id="f-address" type="text" 
+              class="w-full bg-gray-50 border-none rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-orange-300" 
+              data-ph-zh="店铺地址" data-ph-en="Store address" placeholder="店铺地址"/>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="text-xs font-semibold text-secondary mb-1 block" data-zh="营业时间" data-en="Hours">营业时间</label>
+              <input id="f-hours" type="text" 
+                class="w-full bg-gray-50 border-none rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-orange-300" 
+                placeholder="9:00-21:00"/>
+            </div>
+            <div>
+              <label class="text-xs font-semibold text-secondary mb-1 block" data-zh="联系电话" data-en="Phone">联系电话</label>
+              <input id="f-phone" type="tel" 
+                class="w-full bg-gray-50 border-none rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-orange-300" 
+                placeholder="138-0000-0000"/>
+            </div>
+          </div>
+
+          <div>
+            <label class="text-xs font-semibold text-secondary mb-1 block" data-zh="店铺评分" data-en="Rating">店铺评分</label>
+            <input id="f-rating" type="number" step="0.1" min="0" max="5" 
+              class="w-full bg-gray-50 border-none rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-orange-300" 
+              placeholder="4.5"/>
+          </div>
+        </form>
+      </section>
+
+      <!-- 保存按钮 -->
+      <div class="flex gap-3">
+        <button onclick="saveStore()" 
+          class="flex-1 bg-primary-container text-white font-bold py-4 rounded-xl shadow-md shadow-orange-200 flex items-center justify-center gap-2 active:scale-[.98] transition-transform">
+          <span class="material-symbols-outlined text-xl">save</span>
+          <span data-zh="保存更改" data-en="Save Changes">保存更改</span>
+        </button>
+      </div>
+
+      <!-- 提示信息 -->
+      <div id="save-result" class="hidden p-4 rounded-xl border text-sm font-semibold flex items-center gap-3"></div>
+
+    </div>
+  </main>
+</div>
+
+<nav class="md:hidden fixed bottom-0 left-0 w-full flex justify-around items-center px-2 py-2 bg-white/95 backdrop-blur border-t border-orange-50 shadow-lg z-50" id="merchant-bottom-nav"></nav>
+
+<script src="../db.js"></script>
+<script src="_nav.js"></script>
+<script>
+  DB.init();
+  checkMerchantAuth();
+  I18N.applyAll();
+  renderMerchantNav('store');
+
+  function loadStoreInfo() {
+    const m = DB.getCurrentMerchant();
+    const store = DB.findById('stores', m.store_id);
+    
+    if (store) {
+      document.getElementById('f-name').value = store.name || '';
+      document.getElementById('f-category').value = store.category || 'Coffee';
+      document.getElementById('f-description').value = store.description || '';
+      document.getElementById('f-address').value = store.address || '';
+      document.getElementById('f-hours').value = store.hours || '';
+      document.getElementById('f-phone').value = store.phone || '';
+      document.getElementById('f-rating').value = store.rating || 4.5;
+      
+      if (store.cover_image) {
+        const preview = document.getElementById('cover-preview');
+        preview.src = store.cover_image;
+        preview.classList.remove('hidden');
+      }
+    }
+  }
+
+  function previewCover(event) {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const preview = document.getElementById('cover-preview');
+        preview.src = e.target.result;
+        preview.classList.remove('hidden');
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  function saveStore() {
+    const m = DB.getCurrentMerchant();
+    const result = document.getElementById('save-result');
+    
+    const data = {
+      name: document.getElementById('f-name').value,
+      category: document.getElementById('f-category').value,
+      description: document.getElementById('f-description').value,
+      address: document.getElementById('f-address').value,
+      hours: document.getElementById('f-hours').value,
+      phone: document.getElementById('f-phone').value,
+      rating: parseFloat(document.getElementById('f-rating').value) || 4.5,
+    };
+
+    const coverPreview = document.getElementById('cover-preview');
+    if (!coverPreview.classList.contains('hidden')) {
+      data.cover_image = coverPreview.src;
+    }
+
+    DB.update('stores', m.store_id, data);
+    DB.update('merchants', m.id, { store_name: data.name });
+
+    result.classList.remove('hidden');
+    result.className = 'p-4 rounded-xl border border-green-200 bg-green-50 text-green-700 text-sm font-semibold flex items-center gap-3';
+    result.innerHTML = '<span class="material-symbols-outlined text-2xl" style="font-variation-settings:\'FILL\' 1,\'wght\' 500">check_circle</span><p>' + 
+      I18N.t('保存成功！', 'Saved successfully!') + '</p>';
+    
+    setTimeout(() => result.classList.add('hidden'), 3000);
+    
+    // 更新header显示
+    renderMerchantNav('store');
+  }
+
+  loadStoreInfo();
+
+  function toggleProfileMenu() {
+    const menu = document.getElementById('profile-menu');
+    menu.classList.toggle('hidden');
+  }
+
+  // 点击其他地方关闭菜单
+  document.addEventListener('click', function(e) {
+    const menu = document.getElementById('profile-menu');
+    const button = e.target.closest('button[onclick="toggleProfileMenu()"]');
+    if (!button && !menu.contains(e.target)) {
+      menu.classList.add('hidden');
+    }
+  });
+
+  // 更新菜单中的商家信息
+  const m = DB.getCurrentMerchant();
+  if (m) {
+    document.getElementById('menu-merchant-name').textContent = m.name;
+    document.getElementById('menu-store-name').textContent = m.store_name;
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>核销 - Merchant Hub</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script>tailwind.config={theme:{extend:{colors:{"primary":"#a04100","primary-container":"#ff6b00","on-primary":"#ffffff","on-primary-container":"#572000","surface":"#f9f9f9","on-surface":"#1a1c1c","secondary":"#5f5e5e","on-surface-variant":"#5a4136","surface-container-low":"#f3f3f3","surface-container-lowest":"#ffffff","outline-variant":"#e2bfb0","error":"#ba1a1a","error-container":"#ffdad6","on-error-container":"#93000a"}}}}</script>
+<style>
+  body{font-family:'Work Sans',sans-serif;background:#f9f9f9;min-height:100dvh;}
+  .material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;}
+</style>
+</head>
+<body class="bg-surface text-on-surface">
+
+<header class="sticky top-0 z-50 bg-white shadow-[0_2px_12px_rgba(0,0,0,0.06)] flex justify-between items-center px-4 h-16">
+  <div class="flex items-center gap-3">
+    <button onclick="document.getElementById('drawer').classList.toggle('hidden')" class="md:hidden p-2 rounded-full hover:bg-gray-100">
+      <span class="material-symbols-outlined text-primary">menu</span>
+    </button>
+    <h1 class="font-black text-primary text-lg" style="font-family:'Plus Jakarta Sans',sans-serif" id="merchant-header-name">Merchant Hub</h1>
+  </div>
+  <div class="flex items-center gap-3">
+    <button id="lang-toggle" onclick="I18N.toggle()" class="w-9 h-9 rounded-full bg-orange-50 border border-orange-200 text-primary font-bold text-xs">EN</button>
+    
+    <!-- 头像下拉菜单 -->
+    <div class="relative">
+      <button onclick="toggleProfileMenu()" class="w-9 h-9 rounded-full bg-gradient-to-br from-orange-400 to-amber-600 flex items-center justify-center text-white font-bold shadow-sm hover:shadow-md transition-shadow">
+        <span class="material-symbols-outlined text-xl">person</span>
+      </button>
+      
+      <!-- 下拉菜单 -->
+      <div id="profile-menu" class="hidden absolute right-0 top-12 w-48 bg-white rounded-xl shadow-xl border border-orange-50 py-2 z-50">
+        <div class="px-4 py-3 border-b border-gray-100">
+          <p id="menu-merchant-name" class="font-bold text-sm text-on-surface">商家管理员</p>
+          <p id="menu-store-name" class="text-xs text-secondary mt-0.5">Amber Roast Coffee</p>
+        </div>
+        <a href="store.html" class="flex items-center gap-3 px-4 py-2.5 hover:bg-orange-50 transition-colors text-sm text-on-surface">
+          <span class="material-symbols-outlined text-xl text-primary">storefront</span>
+          <span data-zh="店铺管理" data-en="Store Settings">店铺管理</span>
+        </a>
+        <a href="account.html" class="flex items-center gap-3 px-4 py-2.5 hover:bg-orange-50 transition-colors text-sm text-on-surface">
+          <span class="material-symbols-outlined text-xl text-secondary">settings</span>
+          <span data-zh="账号设置" data-en="Account Settings">账号设置</span>
+        </a>
+        <div class="border-t border-gray-100 mt-1 pt-1">
+          <a href="login.html" onclick="sessionStorage.clear();localStorage.removeItem('merchant_id')" class="flex items-center gap-3 px-4 py-2.5 hover:bg-red-50 transition-colors text-sm text-red-600">
+            <span class="material-symbols-outlined text-xl">logout</span>
+            <span data-zh="退出登录" data-en="Sign Out">退出登录</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="flex min-h-[calc(100dvh-64px)]">
+  <aside id="merchant-aside" class="hidden md:flex flex-col w-60 bg-white border-r border-orange-50 p-4 fixed left-0 top-16 bottom-0 overflow-y-auto"></aside>
+
+  <div id="drawer" class="hidden fixed inset-0 z-40 md:hidden">
+    <div class="absolute inset-0 bg-black/30" onclick="document.getElementById('drawer').classList.add('hidden')"></div>
+    <aside class="absolute left-0 top-0 bottom-0 w-64 bg-white p-4 shadow-xl" id="merchant-aside-mobile"></aside>
+  </div>
+
+  <main class="flex-1 md:ml-60 pb-24 md:pb-8 p-4">
+    <div class="max-w-2xl mx-auto space-y-6">
+
+      <!-- 核销输入区 -->
+      <section class="space-y-3">
+        <h2 class="text-2xl font-black text-on-surface" style="font-family:'Plus Jakarta Sans',sans-serif" data-zh="券码核销" data-en="Coupon Verification">券码核销</h2>
+        
+        <!-- 输入框 -->
+        <div class="relative">
+          <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-secondary text-xl">search</span>
+          <input id="coupon-input" type="text"
+            class="w-full bg-white border border-orange-100 rounded-xl py-3.5 pl-10 pr-4 text-sm focus:ring-2 focus:ring-orange-300 transition-all shadow-sm"
+            data-ph-zh="输入券码进行核销..." data-ph-en="Enter coupon code..." placeholder="输入券码进行核销..."
+            onkeydown="if(event.key==='Enter') doVerify()"/>
+        </div>
+
+        <!-- 扫码核销按钮 -->
+        <button onclick="doVerify()"
+          class="w-full px-5 py-4 bg-primary-container text-white font-bold rounded-xl shadow-md shadow-orange-200 flex items-center justify-center gap-2 active:scale-95 transition-transform text-base">
+          <span class="material-symbols-outlined text-2xl">qr_code_scanner</span>
+          <span data-zh="扫码核销" data-en="Scan to Verify">扫码核销</span>
+        </button>
+
+        <!-- 结果提示 -->
+        <div id="verify-result" class="hidden p-4 rounded-xl border text-sm font-semibold flex items-center gap-3"></div>
+      </section>
+
+      <!-- 统计 -->
+      <div class="grid grid-cols-3 gap-3">
+        <div class="bg-white p-4 rounded-xl shadow-[0_2px_12px_rgba(0,0,0,0.05)] flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center">
+            <span class="material-symbols-outlined text-green-600 text-xl">check_circle</span>
+          </div>
+          <div>
+            <p class="text-xs text-secondary" data-zh="今日核销" data-en="Today Verified">今日核销</p>
+            <p id="stat-verified" class="text-xl font-black text-on-surface" style="font-family:'Plus Jakarta Sans',sans-serif">0</p>
+          </div>
+        </div>
+        <div class="bg-white p-4 rounded-xl shadow-[0_2px_12px_rgba(0,0,0,0.05)] flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full bg-amber-50 flex items-center justify-center">
+            <span class="material-symbols-outlined text-amber-600 text-xl">pending_actions</span>
+          </div>
+          <div>
+            <p class="text-xs text-secondary" data-zh="待核销" data-en="Pending">待核销</p>
+            <p id="stat-pending" class="text-xl font-black text-on-surface" style="font-family:'Plus Jakarta Sans',sans-serif">0</p>
+          </div>
+        </div>
+        <div class="bg-white p-4 rounded-xl shadow-[0_2px_12px_rgba(0,0,0,0.05)] flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center">
+            <span class="material-symbols-outlined text-red-400 text-xl">report</span>
+          </div>
+          <div>
+            <p class="text-xs text-secondary" data-zh="异常" data-en="Invalid">异常</p>
+            <p id="stat-invalid" class="text-xl font-black text-on-surface" style="font-family:'Plus Jakarta Sans',sans-serif">0</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 核销记录 -->
+      <section class="space-y-3">
+        <div class="flex items-center justify-between">
+          <h3 class="font-bold text-on-surface" data-zh="核销记录" data-en="Verification Records">核销记录</h3>
+          <div class="flex bg-gray-100 p-1 rounded-lg gap-1">
+            <button onclick="filterVerify('all')" id="vtab-all" class="vtab px-3 py-1 text-xs font-bold bg-white shadow-sm rounded-md text-on-surface"
+              data-zh="全部" data-en="All">全部</button>
+            <button onclick="filterVerify('used')" id="vtab-used" class="vtab px-3 py-1 text-xs font-bold text-secondary rounded-md"
+              data-zh="已核销" data-en="Verified">已核销</button>
+            <button onclick="filterVerify('unused')" id="vtab-unused" class="vtab px-3 py-1 text-xs font-bold text-secondary rounded-md"
+              data-zh="待核销" data-en="Pending">待核销</button>
+          </div>
+        </div>
+        <div id="verify-list" class="space-y-3"></div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<nav class="md:hidden fixed bottom-0 left-0 w-full flex justify-around items-center px-2 py-2 bg-white/95 backdrop-blur border-t border-orange-50 shadow-lg z-50" id="merchant-bottom-nav"></nav>
+
+<script src="../db.js"></script>
+<script src="_nav.js"></script>
+<script>
+  DB.init();
+  checkMerchantAuth();
+  I18N.applyAll();
+  renderMerchantNav('verify');
+
+  let verifyFilter = 'all';
+
+  function filterVerify(f) {
+    verifyFilter = f;
+    document.querySelectorAll('.vtab').forEach(b => b.className = 'vtab px-3 py-1 text-xs font-bold text-secondary rounded-md');
+    const active = document.getElementById('vtab-' + f);
+    if (active) active.className = 'vtab px-3 py-1 text-xs font-bold bg-white shadow-sm rounded-md text-on-surface';
+    renderVerifyList();
+  }
+
+  function renderVerifyList() {
+    const m = DB.getCurrentMerchant();
+    let orders = DB.findWhere('orders', r => r.merchant_id === m.id && r.coupon_code);
+    if (verifyFilter === 'used') orders = orders.filter(o => o.coupon_used === 1);
+    if (verifyFilter === 'unused') orders = orders.filter(o => o.coupon_used === 0 && o.status !== 'cancelled');
+
+    const verified = orders.filter(o => o.coupon_used === 1).length;
+    const pending = orders.filter(o => o.coupon_used === 0).length;
+    document.getElementById('stat-verified').textContent = verified;
+    document.getElementById('stat-pending').textContent = pending;
+    document.getElementById('stat-invalid').textContent = 0;
+
+    const list = document.getElementById('verify-list');
+    if (!orders.length) {
+      list.innerHTML = `<div class="text-center py-10 text-secondary text-sm">${I18N.t('暂无记录','No records')}</div>`;
+      return;
+    }
+
+    list.innerHTML = orders.map(order => {
+      const items = DB.findWhere('order_items', r => r.order_id === order.id);
+      const user = DB.findById('users', order.user_id);
+      const item = items[0];
+      const isUsed = order.coupon_used === 1;
+      const timeStr = isUsed && order.coupon_used_at
+        ? new Date(order.coupon_used_at).toLocaleString()
+        : I18N.t('待核销','Pending');
+
+      return `
+      <div class="bg-white rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.05)] p-4 flex gap-4 border border-orange-50 hover:border-orange-200 transition-colors">
+        ${item ? `<img src="${item.image||'https://via.placeholder.com/80'}" class="w-20 h-20 rounded-xl object-cover flex-shrink-0"/>` : ''}
+        <div class="flex-1 min-w-0">
+          <div class="flex justify-between items-start">
+            <p class="font-bold text-sm text-on-surface">${item ? item.name_zh : order.order_no}</p>
+            <span class="px-2 py-0.5 rounded text-xs font-bold ${isUsed ? 'bg-green-50 text-green-700' : 'bg-amber-50 text-amber-700'}">
+              ${isUsed ? I18N.t('已核销','Verified') : I18N.t('待核销','Pending')}
+            </span>
+          </div>
+          <div class="flex items-center gap-1 text-xs text-secondary mt-1">
+            <span class="material-symbols-outlined text-sm">tag</span>
+            <span>${I18N.t('券码:','Code:')} ${order.coupon_code}</span>
+          </div>
+          <p class="text-xs text-secondary mt-1">${I18N.t('用户:','User:')} ${user ? (user.nickname || user.phone) : '-'}</p>
+          <div class="flex justify-between items-center mt-2">
+            <p class="text-xs text-secondary">${timeStr}</p>
+            ${!isUsed ? `<button onclick="quickVerify('${order.coupon_code}')"
+              class="px-3 py-1.5 bg-primary-container text-white text-xs font-bold rounded-lg active:scale-95 transition-transform">
+              ${I18N.t('立即核销','Verify Now')}</button>` : ''}
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function doVerify() {
+    const code = document.getElementById('coupon-input').value.trim();
+    if (!code) return;
+    quickVerify(code);
+  }
+
+  function quickVerify(code) {
+    const m = DB.getCurrentMerchant();
+    const result = document.getElementById('verify-result');
+    const order = DB.verifyCoupon(m.id, code);
+    result.classList.remove('hidden');
+    if (order) {
+      result.className = 'p-4 rounded-xl border border-green-200 bg-green-50 text-green-700 text-sm font-semibold flex items-center gap-3';
+      result.innerHTML = `<span class="material-symbols-outlined text-2xl" style="font-variation-settings:'FILL' 1,'wght' 500">check_circle</span>
+        <div><p>${I18N.t('核销成功！','Verification successful!')}</p>
+        <p class="text-xs font-normal mt-0.5">${I18N.t('订单:','Order:')} ${order.order_no}</p></div>`;
+      document.getElementById('coupon-input').value = '';
+    } else {
+      result.className = 'p-4 rounded-xl border border-red-200 bg-red-50 text-red-600 text-sm font-semibold flex items-center gap-3';
+      result.innerHTML = `<span class="material-symbols-outlined text-2xl">error</span>
+        <p>${I18N.t('券码无效或已使用','Invalid or already used coupon')}</p>`;
+    }
+    renderVerifyList();
+    setTimeout(() => result.classList.add('hidden'), 4000);
+  }
+
+  renderVerifyList();
+
+  function toggleProfileMenu() {
+    const menu = document.getElementById('profile-menu');
+    menu.classList.toggle('hidden');
+  }
+
+  // 点击其他地方关闭菜单
+  document.addEventListener('click', function(e) {
+    const menu = document.getElementById('profile-menu');
+    const button = e.target.closest('button[onclick="toggleProfileMenu()"]');
+    if (!button && !menu.contains(e.target)) {
+      menu.classList.add('hidden');
+    }
+  });
+
+  // 更新菜单中的商家信息
+  const m = DB.getCurrentMerchant();
+  if (m) {
+    document.getElementById('menu-merchant-name').textContent = m.name;
+    document.getElementById('menu-store-name').textContent = m.store_name;
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>购物车 - 振华商城</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script>tailwind.config={theme:{extend:{colors:{"primary":"#a04100","primary-container":"#ff6b00","on-primary":"#ffffff","on-primary-container":"#572000","surface":"#f9f9f9","on-surface":"#1a1c1c","secondary":"#5f5e5e","on-surface-variant":"#5a4136","surface-container-low":"#f3f3f3","surface-container-lowest":"#ffffff","outline-variant":"#e2bfb0","error":"#ba1a1a"}}}}</script>
+<style>
+  body{font-family:'Work Sans',sans-serif;background:#f9f9f9;min-height:100dvh;}
+  .material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;}
+</style>
+</head>
+<body class="bg-surface text-on-surface pb-36">
+
+<header class="sticky top-0 z-50 bg-white/95 backdrop-blur shadow-[0_2px_12px_rgba(0,0,0,0.06)] flex justify-between items-center px-4 py-3">
+  <button onclick="history.back()" class="p-1"><span class="material-symbols-outlined text-primary">arrow_back</span></button>
+  <h1 class="font-black text-primary text-base" style="font-family:'Plus Jakarta Sans',sans-serif" data-zh="购物车" data-en="Cart">购物车</h1>
+  <button id="lang-toggle" onclick="I18N.toggle()" class="w-8 h-8 rounded-full bg-orange-50 border border-orange-200 text-primary font-bold text-xs">EN</button>
+</header>
+
+<main class="px-4 pt-4 space-y-3" id="cart-content"></main>
+
+<!-- 积分抵扣 -->
+<div id="points-section" class="hidden mx-4 mt-3 bg-amber-50 rounded-2xl p-4 border border-amber-100">
+  <div class="flex items-center justify-between">
+    <div class="flex items-center gap-2">
+      <span class="material-symbols-outlined text-amber-600 text-xl" style="font-variation-settings:'FILL' 1,'wght' 500">stars</span>
+      <div>
+        <p class="text-sm font-bold text-amber-800" data-zh="使用积分抵扣" data-en="Use Points">使用积分抵扣</p>
+        <p id="points-desc" class="text-xs text-amber-600"></p>
+      </div>
+    </div>
+    <label class="flex items-center gap-2 cursor-pointer">
+      <input type="checkbox" id="use-points" onchange="renderTotal()" class="rounded text-amber-500 focus:ring-amber-400"/>
+    </label>
+  </div>
+</div>
+
+<!-- 底部结算栏 -->
+<div class="fixed bottom-0 left-0 w-full z-50 bg-white/95 backdrop-blur border-t border-orange-50 shadow-lg px-4 py-3">
+  <div class="flex items-center justify-between max-w-lg mx-auto">
+    <div>
+      <p class="text-xs text-secondary" data-zh="合计" data-en="Total">合计</p>
+      <p id="total-price" class="font-black text-primary text-2xl" style="font-family:'Plus Jakarta Sans',sans-serif">¥0</p>
+      <p id="points-save" class="text-xs text-amber-600 hidden"></p>
+    </div>
+    <button onclick="checkout()" id="checkout-btn"
+      class="px-8 py-3.5 bg-primary-container text-white font-bold rounded-xl shadow-md shadow-orange-200 active:scale-95 transition-transform">
+      <span data-zh="去结算" data-en="Checkout">去结算</span>
+      <span id="checkout-count" class="ml-1 text-white/80 text-sm">(0)</span>
+    </button>
+  </div>
+</div>
+
+<script src="../db.js"></script>
+<script src="_nav.js"></script>
+<script src="_message_banner.js"></script>
+<script>
+  DB.init();
+  I18N.applyAll();
+  
+  // 检查登录状态（不阻止页面渲染）
+  let user = DB.getCurrentUser();
+  if (!user) {
+    window.location.href = 'login.html';
+  }
+
+  function renderCart() {
+    const items = DB.findWhere('cart_items', r => r.user_id === user.id);
+    console.log('购物车商品:', items);
+    console.log('当前用户ID:', user.id);
+    const content = document.getElementById('cart-content');
+
+    if (!items.length) {
+      content.innerHTML = `
+        <div class="text-center py-20">
+          <span class="material-symbols-outlined text-6xl text-gray-200">shopping_cart</span>
+          <p class="text-secondary mt-3" data-zh="购物车是空的" data-en="Your cart is empty">${I18N.t('购物车是空的','Your cart is empty')}</p>
+          <a href="home.html" class="inline-block mt-4 px-6 py-2.5 bg-primary-container text-white rounded-xl font-bold text-sm">
+            ${I18N.t('去购物','Shop Now')}
+          </a>
+        </div>`;
+      document.getElementById('points-section').classList.add('hidden');
+      renderTotal();
+      return;
+    }
+
+    // 积分区域
+    const pointsSection = document.getElementById('points-section');
+    if (user.points > 0) {
+      pointsSection.classList.remove('hidden');
+      document.getElementById('points-desc').textContent =
+        I18N.t('可用 ' + user.points + ' 积分，抵扣 ¥' + (user.points * 0.01).toFixed(2),
+               'Use ' + user.points + ' pts, save ¥' + (user.points * 0.01).toFixed(2));
+    }
+
+    content.innerHTML = items.map(item => {
+      const product = DB.findById('products', item.product_id);
+      if (!product) return '';
+      return `
+      <div class="bg-white rounded-2xl p-3 flex gap-3 shadow-sm border border-orange-50" id="cart-item-${item.id}">
+        <img src="${product.image||'https://via.placeholder.com/80'}" class="w-20 h-20 rounded-xl object-cover flex-shrink-0"/>
+        <div class="flex-1 min-w-0">
+          <p class="font-bold text-sm text-on-surface line-clamp-2">${product.name_zh}</p>
+          ${item.spec ? `<p class="text-xs text-secondary mt-0.5">${item.spec}</p>` : ''}
+          <div class="flex justify-between items-center mt-2">
+            <span class="font-black text-primary text-base" style="font-family:'Plus Jakarta Sans',sans-serif">¥${product.price}</span>
+            <div class="flex items-center gap-2">
+              <button onclick="changeQty(${item.id}, ${item.quantity - 1})"
+                class="w-7 h-7 rounded-lg bg-gray-100 flex items-center justify-center active:scale-90 transition-transform">
+                <span class="material-symbols-outlined text-base">${item.quantity <= 1 ? 'delete' : 'remove'}</span>
+              </button>
+              <span class="font-bold text-sm w-5 text-center">${item.quantity}</span>
+              <button onclick="changeQty(${item.id}, ${item.quantity + 1})"
+                class="w-7 h-7 rounded-lg bg-primary-container flex items-center justify-center text-white active:scale-90 transition-transform">
+                <span class="material-symbols-outlined text-base">add</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+
+    renderTotal();
+    I18N.applyAll();
+  }
+
+  function renderTotal() {
+    const items = DB.findWhere('cart_items', r => r.user_id === user.id);
+    let total = 0;
+    items.forEach(item => {
+      const p = DB.findById('products', item.product_id);
+      if (p) total += p.price * item.quantity;
+    });
+
+    const usePoints = document.getElementById('use-points')?.checked;
+    const pointsDiscount = usePoints ? Math.min(user.points, 500) * 0.01 : 0;
+    const finalTotal = Math.max(0, total - pointsDiscount);
+
+    document.getElementById('total-price').textContent = '¥' + finalTotal.toFixed(2);
+    document.getElementById('checkout-count').textContent = '(' + items.reduce((s,i) => s + i.quantity, 0) + ')';
+
+    const saveEl = document.getElementById('points-save');
+    if (usePoints && pointsDiscount > 0) {
+      saveEl.classList.remove('hidden');
+      saveEl.textContent = I18N.t('积分抵扣 -¥' + pointsDiscount.toFixed(2), 'Points saved -¥' + pointsDiscount.toFixed(2));
+    } else {
+      saveEl.classList.add('hidden');
+    }
+  }
+
+  function changeQty(itemId, newQty) {
+    if (newQty <= 0) {
+      DB.remove('cart_items', itemId);
+    } else {
+      DB.update('cart_items', itemId, { quantity: newQty });
+    }
+    renderCart();
+  }
+
+  function checkout() {
+    const items = DB.findWhere('cart_items', r => r.user_id === user.id);
+    if (!items.length) return;
+
+    const usePoints = document.getElementById('use-points')?.checked;
+    const pointsUsed = usePoints ? Math.min(user.points, 500) : 0;
+
+    const orderItems = items.map(item => {
+      const p = DB.findById('products', item.product_id);
+      return { product_id: item.product_id, name_zh: p.name_zh, price: p.price, quantity: item.quantity, image: p.image, spec: item.spec || '' };
+    });
+
+    const merchantId = DB.findById('products', items[0].product_id)?.merchant_id || 1;
+    const order = DB.createOrder(user.id, merchantId, orderItems, pointsUsed);
+    location.href = 'order_success.html?order=' + order.order_no;
+  }
+
+  renderCart();
+</script>
+</body>
+</html>

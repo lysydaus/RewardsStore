@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>周边门店 - 振华商城</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script>tailwind.config={theme:{extend:{colors:{"primary":"#a04100","primary-container":"#ff6b00","on-primary":"#ffffff","on-primary-container":"#572000","surface":"#f9f9f9","on-surface":"#1a1c1c","secondary":"#5f5e5e","on-surface-variant":"#5a4136","surface-container-low":"#f3f3f3","surface-container-lowest":"#ffffff","outline-variant":"#e2bfb0"}}}}</script>
+<style>
+  body{font-family:'Work Sans',sans-serif;background:#f9f9f9;min-height:100dvh;}
+  .material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;}
+  .hide-scroll::-webkit-scrollbar{display:none;}
+</style>
+</head>
+<body class="bg-surface text-on-surface pb-24">
+
+<header class="sticky top-0 z-50 bg-white/95 backdrop-blur shadow-[0_2px_12px_rgba(0,0,0,0.06)] flex justify-between items-center px-4 py-3">
+  <div class="flex items-center gap-2">
+    <button onclick="toggleMenu()" class="p-1"><span class="material-symbols-outlined text-primary">menu</span></button>
+    <h1 class="font-black text-primary text-xl" style="font-family:'Plus Jakarta Sans',sans-serif" data-zh="振华商城" data-en="Vibrant Store">振华商城</h1>
+  </div>
+  <div class="flex items-center gap-2">
+    <button id="lang-toggle" onclick="I18N.toggle()" class="w-8 h-8 rounded-full bg-orange-50 border border-orange-200 text-primary font-bold text-xs">EN</button>
+    <button onclick="location.href='cart.html'" class="relative p-1">
+      <span class="material-symbols-outlined text-primary text-2xl" style="font-variation-settings:'FILL' 1,'wght' 500">shopping_cart</span>
+      <span id="cart-badge" class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold">0</span>
+    </button>
+  </div>
+</header>
+
+<!-- 下拉菜单 -->
+<div id="dropdown-menu" class="hidden fixed top-14 left-4 z-50 bg-white rounded-xl shadow-lg border border-orange-50 overflow-hidden min-w-[160px]">
+  <a href="profile.html" class="w-full flex items-center gap-3 px-4 py-3 hover:bg-orange-50 transition-colors">
+    <span class="material-symbols-outlined text-primary">person</span>
+    <span class="text-on-surface font-medium text-sm" data-zh="个人中心" data-en="Profile">个人中心</span>
+  </a>
+  <a href="addresses.html" class="w-full flex items-center gap-3 px-4 py-3 hover:bg-orange-50 transition-colors">
+    <span class="material-symbols-outlined text-primary">location_on</span>
+    <span class="text-on-surface font-medium text-sm" data-zh="收货地址" data-en="Addresses">收货地址</span>
+  </a>
+  <a href="payments.html" class="w-full flex items-center gap-3 px-4 py-3 hover:bg-orange-50 transition-colors">
+    <span class="material-symbols-outlined text-primary">credit_card</span>
+    <span class="text-on-surface font-medium text-sm" data-zh="支付方式" data-en="Payments">支付方式</span>
+  </a>
+</div>
+
+<main class="px-4 pt-4 space-y-4">
+  <!-- 标题 + 位置 -->
+  <div class="flex items-center justify-between">
+    <h2 class="font-bold text-on-surface text-lg" data-zh="周边门店" data-en="Life Circle">周边门店</h2>
+    <div class="flex items-center text-primary gap-1">
+      <span class="material-symbols-outlined text-base">location_on</span>
+      <span class="text-xs font-bold" data-zh="市中心" data-en="Downtown">市中心</span>
+    </div>
+  </div>
+
+  <!-- 分类筛选 -->
+  <div class="flex gap-2 overflow-x-auto hide-scroll pb-1">
+    <button onclick="filterStores('all')" id="stab-all" class="stab whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-bold bg-primary-container text-white">
+      <span data-zh="全部" data-en="All">全部</span>
+    </button>
+    <button onclick="filterStores('Coffee')" id="stab-coffee" class="stab whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-bold bg-gray-100 text-secondary">
+      <span data-zh="咖啡茶饮" data-en="Coffee">咖啡茶饮</span>
+    </button>
+    <button onclick="filterStores('Bakery')" id="stab-bakery" class="stab whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-bold bg-gray-100 text-secondary">
+      <span data-zh="烘焙" data-en="Bakery">烘焙</span>
+    </button>
+    <button onclick="filterStores('Supermarket')" id="stab-super" class="stab whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-bold bg-gray-100 text-secondary">
+      <span data-zh="超市" data-en="Supermarket">超市</span>
+    </button>
+  </div>
+
+  <!-- 排序 -->
+  <div class="flex items-center gap-4 py-2 border-b border-orange-50">
+    <button class="flex items-center gap-1 text-xs text-secondary">
+      <span data-zh="距离" data-en="Distance">距离</span>
+      <span class="material-symbols-outlined text-sm">expand_more</span>
+    </button>
+    <button class="flex items-center gap-1 text-xs text-secondary">
+      <span data-zh="评分" data-en="Rating">评分</span>
+      <span class="material-symbols-outlined text-sm">expand_more</span>
+    </button>
+    <button class="flex items-center gap-1 text-xs text-secondary">
+      <span data-zh="优惠" data-en="Offers">优惠</span>
+      <span class="material-symbols-outlined text-sm">expand_more</span>
+    </button>
+  </div>
+
+  <!-- 门店列表 -->
+  <div id="store-list" class="flex flex-col gap-3"></div>
+</main>
+
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-2 py-2 bg-white/95 backdrop-blur border-t border-orange-50 shadow-lg z-50" id="customer-bottom-nav"></nav>
+
+<script src="../db.js"></script>
+<script src="_nav.js"></script>
+<script src="_message_banner.js"></script>
+<script>
+  DB.init();
+  I18N.applyAll();
+  
+  // 检查登录状态（不阻止页面渲染）
+  const user = DB.getCurrentUser();
+  if (!user) {
+    window.location.href = 'login.html';
+  }
+  
+  renderCustomerNav('stores');
+  updateCartBadge();
+
+  let storeFilter = 'all';
+
+  function filterStores(cat) {
+    storeFilter = cat;
+    document.querySelectorAll('.stab').forEach(b => b.className = 'stab whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-bold bg-gray-100 text-secondary');
+    const map = { all:'stab-all', Coffee:'stab-coffee', Bakery:'stab-bakery', Supermarket:'stab-super', Electronics:'stab-electronics', Fashion:'stab-fashion', Beauty:'stab-beauty' };
+    const active = document.getElementById(map[cat]);
+    if (active) active.className = 'stab whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-bold bg-primary-container text-white';
+    renderStores();
+  }
+
+  function renderStores() {
+    let stores = DB.findAll('stores');
+    if (storeFilter !== 'all') stores = stores.filter(s => s.category === storeFilter);
+
+    const list = document.getElementById('store-list');
+    if (!stores.length) {
+      list.innerHTML = `<div class="text-center py-10 text-secondary text-sm">${I18N.t('暂无门店','No stores')}</div>`;
+      return;
+    }
+
+    list.innerHTML = stores.map(s => `
+      <div class="bg-white rounded-2xl p-3 flex gap-3 shadow-sm border border-orange-50 hover:border-orange-200 transition-colors">
+        <img src="${s.image||'https://via.placeholder.com/96'}" class="w-24 h-24 rounded-xl object-cover flex-shrink-0"/>
+        <div class="flex-1 flex flex-col justify-between">
+          <div>
+            <h3 class="font-bold text-on-surface text-sm">${I18N.t(s.name_zh, s.name_en||s.name_zh)}</h3>
+            <div class="flex items-center gap-2 mt-1">
+              <div class="flex items-center text-primary gap-0.5">
+                <span class="material-symbols-outlined text-sm" style="font-variation-settings:'FILL' 1,'wght' 500">star</span>
+                <span class="text-xs font-bold">${s.rating}</span>
+              </div>
+              <span class="text-xs text-secondary">${s.review_count}+ ${I18N.t('评价','reviews')}</span>
+            </div>
+            <div class="flex items-center gap-1 text-secondary mt-1">
+              <span class="material-symbols-outlined text-sm">near_me</span>
+              <span class="text-xs">${s.address}</span>
+            </div>
+            ${s.open_hours ? `<p class="text-xs text-secondary mt-0.5">${I18N.t('营业:','Hours:')} ${s.open_hours}</p>` : ''}
+          </div>
+          <div class="flex justify-end mt-2">
+            <button onclick="goToStore(${s.id})"
+              class="px-4 py-1.5 bg-primary-container text-white rounded-full text-xs font-bold active:scale-95 transition-transform">
+              ${I18N.t('到店消费','In-store Pay')}
+            </button>
+          </div>
+        </div>
+      </div>`).join('');
+  }
+
+  function goToStore(id) {
+    location.href = 'store_detail.html?id=' + id;
+  }
+
+  renderStores();
+</script>
+</body>
+</html>

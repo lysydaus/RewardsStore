@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>运维登录 - Admin</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script>tailwind.config={theme:{extend:{colors:{"primary":"#3b82f6","primary-container":"#4f46e5","on-primary":"#ffffff","surface":"#f9f9f9","on-surface":"#1a1c1c","secondary":"#5f5e5e"}}}}</script>
+<style>
+  body { font-family:'Work Sans',sans-serif; background:#f9f9f9; min-height:100dvh; }
+  .material-symbols-outlined { font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24; }
+</style>
+</head>
+<body class="flex flex-col min-h-screen">
+
+<div class="fixed inset-0 pointer-events-none overflow-hidden">
+  <div class="absolute -top-24 -right-12 w-96 h-96 rounded-full bg-blue-100 opacity-30 blur-3xl"></div>
+  <div class="absolute -bottom-16 -left-16 w-72 h-72 rounded-full bg-indigo-100 opacity-30 blur-3xl"></div>
+</div>
+
+<main class="flex-grow flex items-center justify-center px-4 py-10 relative z-10">
+  <div class="w-full max-w-[420px]">
+    <div class="text-center mb-8">
+      <a href="../index.html" class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg mb-4">
+        <span class="material-symbols-outlined text-white text-3xl" style="font-variation-settings:'FILL' 1,'wght' 600">admin_panel_settings</span>
+      </a>
+      <h1 class="text-2xl font-black text-primary-container" style="font-family:'Plus Jakarta Sans',sans-serif">运维管理</h1>
+      <p class="text-secondary text-sm mt-1">Admin Management</p>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-xl border border-blue-50 p-8">
+      <div id="error-msg" class="hidden mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm flex items-center gap-2">
+        <span class="material-symbols-outlined text-base">error</span>
+        <span id="error-text"></span>
+      </div>
+
+      <form id="login-form" class="space-y-5" onsubmit="doLogin(event)">
+        <div class="space-y-1.5">
+          <label class="text-xs font-semibold text-on-surface ml-1">账号</label>
+          <div class="relative group">
+            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-secondary group-focus-within:text-primary transition-colors text-xl">person</span>
+            <input id="username" type="text" value="admin"
+              class="w-full bg-gray-50 border-none rounded-xl py-3.5 pl-10 pr-4 text-sm focus:ring-2 focus:ring-blue-300 transition-all"
+              placeholder="请输入管理员账号"/>
+          </div>
+        </div>
+
+        <div class="space-y-1.5">
+          <label class="text-xs font-semibold text-on-surface ml-1">密码</label>
+          <div class="relative group">
+            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-secondary group-focus-within:text-primary transition-colors text-xl">lock</span>
+            <input id="password" type="password" value="admin123"
+              class="w-full bg-gray-50 border-none rounded-xl py-3.5 pl-10 pr-4 text-sm focus:ring-2 focus:ring-blue-300 transition-all"
+              placeholder="请输入密码"/>
+          </div>
+        </div>
+
+        <button type="submit"
+          class="w-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold text-base py-4 rounded-xl shadow-md hover:opacity-90 active:scale-[.98] transition-all">
+          登 录
+        </button>
+      </form>
+    </div>
+
+    <div class="mt-4 p-3 bg-blue-50 rounded-xl border border-blue-100 text-xs text-secondary text-center">
+      演示账号: admin / admin123
+    </div>
+  </div>
+</main>
+
+<script src="../db.js"></script>
+<script>
+  DB.init();
+
+  function showError(msg) {
+    const box = document.getElementById('error-msg');
+    document.getElementById('error-text').textContent = msg;
+    box.classList.remove('hidden');
+  }
+
+  function doLogin(e) {
+    e.preventDefault();
+    const username = document.getElementById('username').value.trim();
+    const pwd = document.getElementById('password').value;
+    
+    if (username === 'admin' && pwd === 'admin123') {
+      sessionStorage.setItem('admin_logged_in', 'true');
+      window.location.href = 'users.html';
+    } else {
+      showError('账号或密码错误');
+    }
+  }
+</script>
+</body>
+</html>

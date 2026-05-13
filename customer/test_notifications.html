@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>测试消息通知 - 振华商城</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script>tailwind.config={theme:{extend:{colors:{"primary":"#a04100","primary-container":"#ff6b00"}}}}</script>
+<style>
+  body{font-family:'Work Sans',sans-serif;background:#f9f9f9;}
+  .material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;}
+</style>
+</head>
+<body class="bg-surface text-on-surface p-4">
+
+<div class="max-w-2xl mx-auto space-y-4">
+  <div class="bg-white rounded-xl p-6 shadow-sm">
+    <h1 class="font-black text-2xl mb-4">测试消息通知系统</h1>
+    <p class="text-sm text-secondary mb-4">此页面用于测试准会员到期提醒功能</p>
+    
+    <div class="space-y-3">
+      <button onclick="testReminder3Days()" class="w-full bg-blue-500 text-white font-bold py-3 rounded-xl">
+        模拟T-3天提醒（第4天）
+      </button>
+      
+      <button onclick="testReminder1Day()" class="w-full bg-orange-500 text-white font-bold py-3 rounded-xl">
+        模拟T-1天提醒（第6天）
+      </button>
+      
+      <button onclick="testReminderToday()" class="w-full bg-red-500 text-white font-bold py-3 rounded-xl">
+        模拟T-0天提醒（第7天）
+      </button>
+      
+      <button onclick="checkReminders()" class="w-full bg-green-500 text-white font-bold py-3 rounded-xl">
+        自动检查并生成提醒
+      </button>
+      
+      <button onclick="viewNotifications()" class="w-full bg-primary-container text-white font-bold py-3 rounded-xl">
+        查看所有消息
+      </button>
+      
+      <button onclick="clearNotifications()" class="w-full bg-gray-500 text-white font-bold py-3 rounded-xl">
+        清空所有消息
+      </button>
+    </div>
+  </div>
+  
+  <div class="bg-white rounded-xl p-6 shadow-sm">
+    <h2 class="font-bold text-lg mb-3">当前用户信息</h2>
+    <div id="user-info" class="text-sm space-y-2"></div>
+  </div>
+  
+  <div class="bg-white rounded-xl p-6 shadow-sm">
+    <h2 class="font-bold text-lg mb-3">消息列表</h2>
+    <div id="notifications-list" class="space-y-3"></div>
+  </div>
+  
+  <a href="profile.html" class="block text-center text-primary-container font-bold py-3">
+    返回个人中心
+  </a>
+</div>
+
+<script src="../db.js"></script>
+<script>
+  DB.init();
+  
+  const user = DB.getCurrentUser();
+  if (!user) {
+    alert('请先登录');
+    window.location.href = 'login.html';
+  }
+  
+  function displayUserInfo() {
+    const trialTime = DB.getTrialRemainingTime(user.id);
+    const isMember = DB.isMemberActive(user.id);
+    
+    let html = `
+      <p><strong>昵称：</strong>${user.nickname}</p>
+      <p><strong>手机：</strong>${user.phone}</p>
+      <p><strong>会员状态：</strong>${user.member_status}</p>
+      <p><strong>是否准会员：</strong>${user.is_trial_member ? '是' : '否'}</p>
+      <p><strong>是否正式会员：</strong>${user.is_formal_member ? '是' : '否'}</p>
+    `;
+    
+    if (trialTime) {
+      html += `
+        <p><strong>准会员到期：</strong>${user.trial_expire_at}</p>
+        <p><strong>剩余时间：</strong>${trialTime.days}天${trialTime.hours}小时</p>
+        <p><strong>是否过期：</strong>${trialTime.expired ? '是' : '否'}</p>
+      `;
+    }
+    
+    document.getElementById('user-info').innerHTML = html;
+  }
+  
+  function displayNotifications() {
+    const notifications = DB.getNotifications(user.id);
+    const list = document.getElementById('notifications-list');
+    
+    if (!notifications.length) {
+      list.innerHTML = '<p class="text-center text-secondary py-4">暂无消息</p>';
+      return;
+    }
+    
+    list.innerHTML = notifications.map(n => `
+      <div class="p-4 rounded-xl border ${n.is_read ? 'bg-gray-50 border-gray-200' : 'bg-orange-50 border-orange-200'}">
+        <div class="flex items-start justify-between mb-2">
+          <h4 class="font-bold text-sm">${n.title}</h4>
+          ${!n.is_read ? '<span class="text-xs bg-red-500 text-white px-2 py-0.5 rounded-full">未读</span>' : '<span class="text-xs text-secondary">已读</span>'}
+        </div>
+        <p class="text-xs text-secondary mb-2">${n.content}</p>
+        <div class="flex items-center justify-between text-xs text-secondary">
+          <span>${new Date(n.created_at).toLocaleString()}</span>
+          <span class="font-mono">${n.type}</span>
+        </div>
+      </div>
+    `).join('');
+  }
+  
+  function testReminder3Days() {
+    const config = JSON.parse(localStorage.getItem('system_config') || '{}');
+    DB.createNotification(
+      user.id,
+      'trial_reminder_3days',
+      '准会员体验还剩3天',
+      '您的准会员体验还剩3天，已为您节省不少费用。开通正式会员享更多权益！',
+      'membership.html'
+    );
+    alert('已创建T-3天提醒');
+    displayNotifications();
+  }
+  
+  function testReminder1Day() {
+    const config = JSON.parse(localStorage.getItem('system_config') || '{}');
+    const trialPrice = config.trialLimitedPrice || 169;
+    const normalPrice = config.memberYearlyPrice || 199;
+    
+    DB.createNotification(
+      user.id,
+      'trial_reminder_1day',
+      '会员体验明天到期',
+      `您的会员体验将在明天到期，限时优惠开通仅需¥${trialPrice}（原价¥${normalPrice}）`,
+      'membership.html'
+    );
+    alert('已创建T-1天提醒');
+    displayNotifications();
+  }
+  
+  function testReminderToday() {
+    const config = JSON.parse(localStorage.getItem('system_config') || '{}');
+    const trialPrice = config.trialLimitedPrice || 169;
+    
+    DB.createNotification(
+      user.id,
+      'trial_reminder_today',
+      '今天到期！限时优惠即将失效',
+      `您的准会员体验今天到期！限时优惠¥${trialPrice}即将失效，立即开通享受全年权益。`,
+      'membership.html'
+    );
+    alert('已创建T-0天提醒');
+    displayNotifications();
+  }
+  
+  function checkReminders() {
+    DB.checkAndCreateTrialReminders(user.id);
+    alert('已自动检查并生成提醒');
+    displayNotifications();
+  }
+  
+  function viewNotifications() {
+    window.location.href = 'profile.html';
+  }
+  
+  function clearNotifications() {
+    if (confirm('确定要清空所有消息吗？')) {
+      localStorage.setItem('notifications', JSON.stringify([]));
+      alert('已清空所有消息');
+      displayNotifications();
+    }
+  }
+  
+  displayUserInfo();
+  displayNotifications();
+</script>
+</body>
+</html>

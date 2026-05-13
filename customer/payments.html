@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>支付方式 - 振华商城</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script>tailwind.config={theme:{extend:{colors:{"primary":"#a04100","primary-container":"#ff6b00","on-primary":"#ffffff","surface":"#f9f9f9","on-surface":"#1a1c1c","secondary":"#5f5e5e"}}}}</script>
+<style>
+  body{font-family:'Work Sans',sans-serif;background:#f9f9f9;min-height:100dvh;}
+  .material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;}
+  .payment-card{transition:all 0.2s;}
+  .payment-card:active{transform:scale(0.98);}
+</style>
+</head>
+<body class="bg-surface text-on-surface pb-24">
+
+<!-- Header -->
+<header class="sticky top-0 z-50 bg-white/95 backdrop-blur shadow-sm flex justify-between items-center px-4 py-3">
+  <button onclick="history.back()" class="p-1">
+    <span class="material-symbols-outlined text-primary">arrow_back</span>
+  </button>
+  <h1 class="flex-1 text-center font-bold text-on-surface" data-zh="支付方式" data-en="Payment Methods">支付方式</h1>
+  <button id="lang-toggle" onclick="I18N.toggle()" class="w-8 h-8 rounded-full bg-orange-50 border border-orange-200 text-primary font-bold text-xs">EN</button>
+</header>
+
+<main class="px-4 pt-4 pb-4 space-y-4">
+  <!-- 支付方式列表 -->
+  <div id="payment-list"></div>
+
+  <!-- 添加支付方式按钮 -->
+  <button onclick="showPaymentTypeModal()" class="w-full bg-white border-2 border-dashed border-orange-200 rounded-2xl p-4 flex items-center justify-center gap-2 text-primary hover:bg-orange-50 transition-colors">
+    <span class="material-symbols-outlined">add</span>
+    <span class="font-bold text-sm" data-zh="添加支付方式" data-en="Add Payment Method">添加支付方式</span>
+  </button>
+</main>
+
+<!-- 选择支付类型模态框 -->
+<div id="type-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-end">
+  <div class="bg-white w-full rounded-t-3xl p-6">
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="font-bold text-lg" data-zh="选择支付方式" data-en="Select Payment Type">选择支付方式</h2>
+      <button onclick="closeTypeModal()" class="p-1">
+        <span class="material-symbols-outlined text-secondary">close</span>
+      </button>
+    </div>
+
+    <div class="grid grid-cols-2 gap-3">
+      <button onclick="selectPaymentType('alipay')" class="payment-card bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-2xl border border-blue-200 flex flex-col items-center gap-3">
+        <div class="w-16 h-16 bg-blue-500 rounded-2xl flex items-center justify-center text-white text-2xl font-black">支</div>
+        <span class="font-bold text-on-surface">支付宝</span>
+      </button>
+
+      <button onclick="selectPaymentType('wechat')" class="payment-card bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-2xl border border-green-200 flex flex-col items-center gap-3">
+        <div class="w-16 h-16 bg-green-500 rounded-2xl flex items-center justify-center text-white text-2xl font-black">微</div>
+        <span class="font-bold text-on-surface">微信支付</span>
+      </button>
+
+      <button onclick="selectPaymentType('unionpay')" class="payment-card bg-gradient-to-br from-red-50 to-red-100 p-6 rounded-2xl border border-red-200 flex flex-col items-center gap-3">
+        <div class="w-16 h-16 bg-red-500 rounded-2xl flex items-center justify-center text-white text-2xl font-black">云</div>
+        <span class="font-bold text-on-surface">云闪付</span>
+      </button>
+
+      <button onclick="selectPaymentType('bankcard')" class="payment-card bg-gradient-to-br from-orange-50 to-orange-100 p-6 rounded-2xl border border-orange-200 flex flex-col items-center gap-3">
+        <div class="w-16 h-16 bg-primary-container rounded-2xl flex items-center justify-center">
+          <span class="material-symbols-outlined text-white text-3xl">credit_card</span>
+        </div>
+        <span class="font-bold text-on-surface">银行卡</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- 添加/编辑支付方式表单 -->
+<div id="payment-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-end">
+  <div class="bg-white w-full rounded-t-3xl p-6 max-h-[90vh] overflow-y-auto">
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="font-bold text-lg" id="modal-title">添加支付方式</h2>
+      <button onclick="closePaymentForm()" class="p-1">
+        <span class="material-symbols-outlined text-secondary">close</span>
+      </button>
+    </div>
+
+    <form id="payment-form" class="space-y-4">
+      <input type="hidden" id="payment-id" value="">
+      <input type="hidden" id="payment-type" value="">
+
+      <!-- 支付宝表单 -->
+      <div id="alipay-form" class="hidden space-y-4">
+        <div class="bg-blue-50 p-4 rounded-xl flex items-center gap-3 border border-blue-200">
+          <div class="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center text-white text-xl font-black">支</div>
+          <div>
+            <p class="font-bold text-on-surface">支付宝</p>
+            <p class="text-xs text-secondary">Alipay</p>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-on-surface mb-2">支付宝账号</label>
+          <input type="text" id="alipay-account" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-primary focus:ring-1 focus:ring-primary" placeholder="手机号或邮箱"/>
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-on-surface mb-2">真实姓名</label>
+          <input type="text" id="alipay-name" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-primary focus:ring-1 focus:ring-primary" placeholder="请输入真实姓名"/>
+        </div>
+      </div>
+
+      <!-- 微信表单 -->
+      <div id="wechat-form" class="hidden space-y-4">
+        <div class="bg-green-50 p-4 rounded-xl flex items-center gap-3 border border-green-200">
+          <div class="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center text-white text-xl font-black">微</div>
+          <div>
+            <p class="font-bold text-on-surface">微信支付</p>
+            <p class="text-xs text-secondary">WeChat Pay</p>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-on-surface mb-2">微信账号</label>
+          <input type="text" id="wechat-account" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-primary focus:ring-1 focus:ring-primary" placeholder="微信号或手机号"/>
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-on-surface mb-2">真实姓名</label>
+          <input type="text" id="wechat-name" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-primary focus:ring-1 focus:ring-primary" placeholder="请输入真实姓名"/>
+        </div>
+      </div>
+
+      <!-- 云闪付表单 -->
+      <div id="unionpay-form" class="hidden space-y-4">
+        <div class="bg-red-50 p-4 rounded-xl flex items-center gap-3 border border-red-200">
+          <div class="w-12 h-12 bg-red-500 rounded-xl flex items-center justify-center text-white text-xl font-black">云</div>
+          <div>
+            <p class="font-bold text-on-surface">云闪付</p>
+            <p class="text-xs text-secondary">UnionPay</p>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-on-surface mb-2">手机号</label>
+          <input type="tel" id="unionpay-phone" pattern="[0-9]{11}" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-primary focus:ring-1 focus:ring-primary" placeholder="请输入11位手机号"/>
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-on-surface mb-2">真实姓名</label>
+          <input type="text" id="unionpay-name" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-primary focus:ring-1 focus:ring-primary" placeholder="请输入真实姓名"/>
+        </div>
+      </div>
+
+      <!-- 银行卡表单 -->
+      <div id="bankcard-form" class="hidden space-y-4">
+        <div class="bg-orange-50 p-4 rounded-xl flex items-center gap-3 border border-orange-200">
+          <div class="w-12 h-12 bg-primary-container rounded-xl flex items-center justify-center">
+            <span class="material-symbols-outlined text-white text-2xl">credit_card</span>
+          </div>
+          <div>
+            <p class="font-bold text-on-surface">银行卡</p>
+            <p class="text-xs text-secondary">Bank Card</p>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-on-surface mb-2">选择银行</label>
+          <select id="bank-name" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-primary focus:ring-1 focus:ring-primary">
+            <option value="">请选择银行</option>
+            <option value="中国工商银行">中国工商银行 (ICBC)</option>
+            <option value="中国建设银行">中国建设银行 (CCB)</option>
+            <option value="中国农业银行">中国农业银行 (ABC)</option>
+            <option value="中国银行">中国银行 (BOC)</option>
+            <option value="交通银行">交通银行 (BOCOM)</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-on-surface mb-2">银行卡号</label>
+          <input type="text" id="card-number" pattern="[0-9]{16,19}" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-primary focus:ring-1 focus:ring-primary font-mono" placeholder="请输入16-19位卡号"/>
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-on-surface mb-2">持卡人姓名</label>
+          <input type="text" id="card-holder" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-primary focus:ring-1 focus:ring-primary" placeholder="请输入持卡人姓名"/>
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-on-surface mb-2">预留手机号</label>
+          <input type="tel" id="card-phone" pattern="[0-9]{11}" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-primary focus:ring-1 focus:ring-primary" placeholder="请输入预留手机号"/>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 p-4 bg-orange-50 rounded-xl">
+        <input type="checkbox" id="is-default" class="w-5 h-5 rounded text-primary focus:ring-primary"/>
+        <label for="is-default" class="text-sm font-semibold text-on-surface cursor-pointer" data-zh="设为默认支付方式" data-en="Set as default">设为默认支付方式</label>
+      </div>
+
+      <button type="submit" class="w-full bg-primary-container text-white font-bold py-3 rounded-xl active:scale-95 transition-transform">
+        <span data-zh="保存" data-en="Save">保存</span>
+      </button>
+    </form>
+  </div>
+</div>
+
+<script src="../db.js"></script>
+<script src="_nav.js"></script>
+<script>
+  DB.init();
+  I18N.applyAll();
+  
+  const user = DB.getCurrentUser();
+  if (!user) {
+    window.location.href = 'login.html';
+  }
+
+  let editingPaymentId = null;
+  let currentPaymentType = null;
+
+  // 支付方式图标和颜色配置
+  const paymentConfig = {
+    alipay: { name: '支付宝', icon: '支', color: 'blue', bgClass: 'bg-blue-50', borderClass: 'border-blue-200', iconBg: 'bg-blue-500' },
+    wechat: { name: '微信支付', icon: '微', color: 'green', bgClass: 'bg-green-50', borderClass: 'border-green-200', iconBg: 'bg-green-500' },
+    unionpay: { name: '云闪付', icon: '云', color: 'red', bgClass: 'bg-red-50', borderClass: 'border-red-200', iconBg: 'bg-red-500' },
+    bankcard: { name: '银行卡', icon: 'credit_card', color: 'orange', bgClass: 'bg-orange-50', borderClass: 'border-orange-200', iconBg: 'bg-primary-container' }
+  };
+
+  // 加载支付方式列表
+  function loadPayments() {
+    const payments = DB.findWhere('payment_methods', p => p.user_id === user.id);
+    const paymentList = document.getElementById('payment-list');
+    
+    if (payments.length === 0) {
+      paymentList.innerHTML = `
+        <div class="text-center py-16">
+          <span class="material-symbols-outlined text-6xl text-gray-200">credit_card_off</span>
+          <p class="text-secondary text-sm mt-3">${I18N.t('暂无支付方式', 'No payment methods yet')}</p>
+        </div>
+      `;
+      return;
+    }
+
+    paymentList.innerHTML = payments.map(payment => {
+      const config = paymentConfig[payment.type];
+      let displayInfo = '';
+      
+      if (payment.type === 'alipay') {
+        displayInfo = payment.account;
+      } else if (payment.type === 'wechat') {
+        displayInfo = payment.account;
+      } else if (payment.type === 'unionpay') {
+        displayInfo = payment.phone;
+      } else if (payment.type === 'bankcard') {
+        displayInfo = `${payment.bank_name} (${payment.card_number.slice(-4)})`;
+      }
+      
+      return `
+        <div class="bg-white rounded-2xl p-4 shadow-sm border ${payment.is_default ? 'border-primary' : 'border-orange-50'}">
+          <div class="flex items-start gap-3">
+            <div class="w-12 h-12 ${config.iconBg} rounded-xl flex items-center justify-center flex-shrink-0">
+              ${config.icon === 'credit_card' ? 
+                `<span class="material-symbols-outlined text-white text-2xl">${config.icon}</span>` :
+                `<span class="text-white text-xl font-black">${config.icon}</span>`
+              }
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="font-bold text-on-surface">${config.name}</span>
+                ${payment.is_default ? `<span class="bg-primary text-white text-xs px-2 py-0.5 rounded-full font-bold">${I18N.t('默认', 'Default')}</span>` : ''}
+              </div>
+              <p class="text-sm text-secondary truncate">${displayInfo}</p>
+              <p class="text-xs text-secondary mt-1">${payment.name}</p>
+            </div>
+            <button onclick="deletePayment(${payment.id})" class="p-1 text-red-500 flex-shrink-0">
+              <span class="material-symbols-outlined text-xl">delete</span>
+            </button>
+          </div>
+          <div class="flex gap-2 pt-3 mt-3 border-t border-gray-100">
+            <button onclick="editPayment(${payment.id})" class="flex-1 py-2 text-sm font-semibold text-primary border border-primary rounded-lg active:scale-95 transition-transform">
+              ${I18N.t('编辑', 'Edit')}
+            </button>
+            ${!payment.is_default ? `
+              <button onclick="setDefaultPayment(${payment.id})" class="flex-1 py-2 text-sm font-semibold text-white bg-primary-container rounded-lg active:scale-95 transition-transform">
+                ${I18N.t('设为默认', 'Set Default')}
+              </button>
+            ` : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // 显示支付类型选择
+  function showPaymentTypeModal() {
+    document.getElementById('type-modal').classList.remove('hidden');
+  }
+
+  // 关闭类型选择
+  function closeTypeModal() {
+    document.getElementById('type-modal').classList.add('hidden');
+  }
+
+  // 选择支付类型
+  function selectPaymentType(type) {
+    currentPaymentType = type;
+    closeTypeModal();
+    showPaymentForm(type);
+  }
+
+  // 显示支付表单
+  function showPaymentForm(type, paymentId = null) {
+    const modal = document.getElementById('payment-modal');
+    const form = document.getElementById('payment-form');
+    
+    // 隐藏所有表单
+    document.querySelectorAll('[id$="-form"]').forEach(f => f.classList.add('hidden'));
+    
+    // 显示对应表单
+    document.getElementById(type + '-form').classList.remove('hidden');
+    document.getElementById('payment-type').value = type;
+    
+    editingPaymentId = paymentId;
+    
+    if (paymentId) {
+      // 编辑模式
+      const payment = DB.findById('payment_methods', paymentId);
+      if (payment) {
+        loadPaymentData(payment);
+      }
+    } else {
+      // 新增模式
+      form.reset();
+      document.getElementById('payment-type').value = type;
+    }
+    
+    modal.classList.remove('hidden');
+    I18N.applyAll();
+  }
+
+  // 加载支付数据到表单
+  function loadPaymentData(payment) {
+    document.getElementById('payment-id').value = payment.id;
+    document.getElementById('is-default').checked = payment.is_default;
+    
+    if (payment.type === 'alipay') {
+      document.getElementById('alipay-account').value = payment.account;
+      document.getElementById('alipay-name').value = payment.name;
+    } else if (payment.type === 'wechat') {
+      document.getElementById('wechat-account').value = payment.account;
+      document.getElementById('wechat-name').value = payment.name;
+    } else if (payment.type === 'unionpay') {
+      document.getElementById('unionpay-phone').value = payment.phone;
+      document.getElementById('unionpay-name').value = payment.name;
+    } else if (payment.type === 'bankcard') {
+      document.getElementById('bank-name').value = payment.bank_name;
+      document.getElementById('card-number').value = payment.card_number;
+      document.getElementById('card-holder').value = payment.name;
+      document.getElementById('card-phone').value = payment.phone;
+    }
+  }
+
+  // 关闭支付表单
+  function closePaymentForm() {
+    document.getElementById('payment-modal').classList.add('hidden');
+    document.getElementById('payment-form').reset();
+    editingPaymentId = null;
+    currentPaymentType = null;
+  }
+
+  // 编辑支付方式
+  function editPayment(id) {
+    const payment = DB.findById('payment_methods', id);
+    if (payment) {
+      showPaymentForm(payment.type, id);
+    }
+  }
+
+  // 设置默认支付方式
+  function setDefaultPayment(id) {
+    const payments = DB.findWhere('payment_methods', p => p.user_id === user.id);
+    payments.forEach(payment => {
+      if (payment.is_default) {
+        DB.update('payment_methods', payment.id, { is_default: false });
+      }
+    });
+    
+    DB.update('payment_methods', id, { is_default: true });
+    loadPayments();
+  }
+
+  // 删除支付方式
+  function deletePayment(id) {
+    if (confirm(I18N.t('确定要删除这个支付方式吗？', 'Delete this payment method?'))) {
+      DB.remove('payment_methods', id);
+      loadPayments();
+    }
+  }
+
+  // 提交表单
+  document.getElementById('payment-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const type = document.getElementById('payment-type').value;
+    const isDefault = document.getElementById('is-default').checked;
+    
+    let paymentData = {
+      user_id: user.id,
+      type: type,
+      is_default: isDefault
+    };
+
+    // 根据类型收集数据
+    if (type === 'alipay') {
+      paymentData.account = document.getElementById('alipay-account').value;
+      paymentData.name = document.getElementById('alipay-name').value;
+    } else if (type === 'wechat') {
+      paymentData.account = document.getElementById('wechat-account').value;
+      paymentData.name = document.getElementById('wechat-name').value;
+    } else if (type === 'unionpay') {
+      paymentData.phone = document.getElementById('unionpay-phone').value;
+      paymentData.name = document.getElementById('unionpay-name').value;
+    } else if (type === 'bankcard') {
+      paymentData.bank_name = document.getElementById('bank-name').value;
+      paymentData.card_number = document.getElementById('card-number').value;
+      paymentData.name = document.getElementById('card-holder').value;
+      paymentData.phone = document.getElementById('card-phone').value;
+    }
+
+    // 如果设为默认，取消其他默认
+    if (isDefault) {
+      const payments = DB.findWhere('payment_methods', p => p.user_id === user.id);
+      payments.forEach(payment => {
+        if (payment.is_default && payment.id !== editingPaymentId) {
+          DB.update('payment_methods', payment.id, { is_default: false });
+        }
+      });
+    }
+
+    if (editingPaymentId) {
+      DB.update('payment_methods', editingPaymentId, paymentData);
+    } else {
+      DB.insert('payment_methods', paymentData);
+    }
+
+    closePaymentForm();
+    loadPayments();
+  });
+
+  // 初始加载
+  loadPayments();
+</script>
+</body>
+</html>

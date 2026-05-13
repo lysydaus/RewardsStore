@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>商品详情</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<style>
+body{font-family:sans-serif;background:#f9f9f9;}
+.material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;}
+</style>
+</head>
+<body class="pb-24">
+<header class="sticky top-0 z-50 bg-white shadow-sm flex justify-between items-center px-4 py-3">
+<button onclick="history.back()" class="p-1"><span class="material-symbols-outlined">arrow_back</span></button>
+<h1 class="flex-1 text-center font-semibold text-sm">商品详情</h1>
+<button class="p-1"><span class="material-symbols-outlined">share</span></button>
+</header>
+<main class="max-w-screen-md mx-auto pb-4"><div id="product-content">正在加载...</div></main>
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-2 py-2 bg-white border-t shadow-lg z-50" id="customer-bottom-nav"></nav>
+<div id="calculator-modal" class="hidden fixed inset-0 z-50 bg-black/40">
+<div class="absolute bottom-0 left-0 w-full bg-white rounded-t-3xl p-6 max-h-[80vh] overflow-y-auto">
+<div class="flex justify-between items-center mb-5">
+<h3 class="font-black text-lg">算一算年省多少</h3>
+<button onclick="closeCalculator()" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
+<span class="material-symbols-outlined">close</span></button></div>
+<div class="space-y-4"><div><label class="text-sm font-semibold mb-2 block">预计年消费金额（元）</label>
+<input id="calc-input" type="number" placeholder="例如：5000" class="w-full bg-gray-50 border rounded-xl py-3 px-4"/></div>
+<button id="calc-btn" onclick="calculate()" class="w-full bg-orange-600 text-white font-bold py-4 rounded-xl">开始计算</button>
+<div id="calc-result" class="hidden"><div class="bg-green-50 rounded-xl p-6 border-2 border-green-200">
+<p class="text-4xl font-black text-green-600 mb-4">¥<span id="total-save">0</span></p>
+<div class="space-y-2 pt-4 border-t"><div class="flex justify-between text-sm"><span>商品价差</span><span class="font-bold">¥<span id="product-save">0</span></span></div>
+<div class="flex justify-between text-sm"><span>运费</span><span class="font-bold">¥<span id="ship-save">0</span></span></div>
+<div class="flex justify-between text-sm"><span>退换无忧</span><span class="font-bold">¥<span id="return-save">0</span></span></div></div></div>
+<div class="grid grid-cols-2 gap-3 mt-4">
+<button onclick="location.href='membership.html'" class="bg-orange-600 text-white font-bold py-4 rounded-xl">去开通</button>
+<button onclick="claimTrial()" class="bg-white border-2 border-orange-600 text-orange-600 font-bold py-4 rounded-xl">先体验</button>
+</div></div></div></div></div>
+<script src="../db.js"></script>
+<script src="_nav.js"></script>
+<script>
+console.log('Script started');
+DB.init();
+var user=DB.getCurrentUser();
+console.log('User:',user);
+if(!user){window.location.href='login.html';}
+renderCustomerNav('stores');
+updateCartBadge();
+var params=new URLSearchParams(location.search);
+var productId=parseInt(params.get('id'));
+console.log('Product ID:',productId);
+if(!productId){document.getElementById('product-content').innerHTML='<div class="text-center py-20">商品ID无效</div>';}
+var product=DB.findById('products',productId);
+console.log('Product:',product);
+if(!product){document.getElementById('product-content').innerHTML='<div class="text-center py-20">商品不存在</div>';}
+var store=DB.findById('stores',product.store_id);
+var isMember=false;
+try{isMember=DB.isMemberActive(user.id);}catch(e){console.log('Member check error:',e);}
+console.log('Is member:',isMember);
+var memberPrice=Math.round(product.price*0.95);
+var saveAmount=product.price-memberPrice;
+var qty=1;
+function render(){
+var h='<div class="w-full aspect-square bg-gray-200"><img src="'+(product.image||'')+'" class="w-full h-full object-cover"/></div>';
+h+='<div class="px-4 mt-4"><div class="bg-white rounded-xl p-4 shadow-sm">';
+h+='<h2 class="font-bold text-lg mb-4">'+product.name_zh+'</h2>';
+h+='<div class="py-4 border-t border-b">';
+if(isMember){
+h+='<div class="flex items-baseline gap-2 mb-2">';
+h+='<span class="px-2 py-1 bg-orange-100 text-orange-700 text-xs font-bold rounded">会员价</span>';
+h+='<p class="font-black text-3xl text-orange-600">¥'+memberPrice+'</p>';
+h+='<span class="text-sm line-through">¥'+product.price+'</span></div>';
+h+='<p class="text-xs text-green-600">已为您节省 ¥'+saveAmount+'</p>';
+}else{
+h+='<div class="flex items-baseline gap-2 mb-2"><p class="font-black text-3xl">¥'+product.price+'</p></div>';
+h+='<div class="flex items-center gap-2 mt-2">';
+h+='<span class="px-2 py-1 bg-orange-100 text-orange-700 text-xs font-bold rounded">会员价</span>';
+h+='<span class="font-bold text-orange-600">¥'+memberPrice+'</span>';
+h+='<span class="text-xs">可省¥'+saveAmount+'</span>';
+h+='<button onclick="openCalc()" class="ml-auto text-xs text-orange-600 font-semibold underline">算一算年省多少</button>';
+h+='</div>';
+}
+h+='</div>';
+h+='<div class="mt-4 pt-4 border-t flex items-center justify-between">';
+h+='<span class="font-semibold text-sm">数量</span>';
+h+='<div class="flex items-center bg-gray-50 rounded-full p-1">';
+h+='<button onclick="changeQty(-1)" class="w-8 h-8">-</button>';
+h+='<span id="qty" class="w-10 text-center font-bold">1</span>';
+h+='<button onclick="changeQty(1)" class="w-8 h-8">+</button></div></div></div>';
+h+='<div class="mt-6"><h3 class="font-semibold text-lg mb-3">商品详情</h3>';
+h+='<p class="text-sm">'+(product.description_zh||'优质商品')+'</p></div>';
+if(store){
+h+='<div class="mt-6 p-4 bg-orange-50 rounded-xl"><p class="font-bold">'+store.name_zh+'</p><p class="text-xs">营业中</p></div>';
+}
+h+='<div class="mt-6 flex gap-3">';
+h+='<button onclick="addCart()" class="flex-1 py-3 border-2 border-orange-600 text-orange-600 font-bold rounded-xl">加入购物车</button>';
+h+='<button onclick="buy()" class="flex-1 py-3 bg-orange-600 text-white font-bold rounded-xl">立即购买</button>';
+h+='</div></div>';
+document.getElementById('product-content').innerHTML=h;
+}
+function changeQty(d){qty=Math.max(1,qty+d);document.getElementById('qty').textContent=qty;}
+function openCalc(){document.getElementById('calculator-modal').classList.remove('hidden');}
+function closeCalculator(){document.getElementById('calculator-modal').classList.add('hidden');}
+function calculate(){
+var v=parseFloat(document.getElementById('calc-input').value);
+if(!v||v<=0){alert('请输入金额');return;}
+var ps=Math.round(v*0.05);
+var ss=96;
+var rs=50;
+document.getElementById('product-save').textContent=ps;
+document.getElementById('ship-save').textContent=ss;
+document.getElementById('return-save').textContent=rs;
+document.getElementById('total-save').textContent=ps+ss+rs;
+document.getElementById('calc-result').classList.remove('hidden');
+}
+function claimTrial(){
+try{
+var r=DB.claimTrialMembership(user.id);
+if(!r.success){alert(r.message);return;}
+closeCalculator();
+if(confirm('恭喜！您已获得7天准会员体验\n\n立即去购物？')){location.reload();}
+}catch(e){alert('领取失败：'+e.message);}
+}
+function addCart(){
+try{
+DB.addToCart(user.id,product.id,qty,'');
+updateCartBadge();
+alert('已添加到购物车');
+}catch(e){alert('添加失败：'+e.message);}
+}
+function buy(){
+try{
+var fp=isMember?memberPrice:product.price;
+var items=[{product_id:product.id,name_zh:product.name_zh,price:fp,quantity:qty,image:product.image,spec:''}];
+var order=DB.createOrder(user.id,product.merchant_id,items,0,isMember);
+location.href='order_success.html?order='+order.order_no;
+}catch(e){alert('购买失败：'+e.message);}
+}
+console.log('Rendering...');
+render();
+console.log('Done');
+</script>
+</body>
+</html>

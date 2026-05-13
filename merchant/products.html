@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>商品管理 - Merchant Hub</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script>tailwind.config={theme:{extend:{colors:{"primary":"#a04100","primary-container":"#ff6b00","on-primary":"#ffffff","on-primary-container":"#572000","surface":"#f9f9f9","on-surface":"#1a1c1c","secondary":"#5f5e5e","on-surface-variant":"#5a4136","surface-container-low":"#f3f3f3","surface-container-lowest":"#ffffff","outline-variant":"#e2bfb0","error":"#ba1a1a","error-container":"#ffdad6","on-error-container":"#93000a"}}}}</script>
+<style>
+  body{font-family:'Work Sans',sans-serif;background:#f9f9f9;min-height:100dvh;}
+  .material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;}
+</style>
+</head>
+<body class="bg-surface text-on-surface">
+
+<header class="sticky top-0 z-50 bg-white shadow-[0_2px_12px_rgba(0,0,0,0.06)] flex justify-between items-center px-4 h-16">
+  <div class="flex items-center gap-3">
+    <button onclick="document.getElementById('drawer').classList.toggle('hidden')" class="md:hidden p-2 rounded-full hover:bg-gray-100">
+      <span class="material-symbols-outlined text-primary">menu</span>
+    </button>
+    <h1 class="font-black text-primary text-lg" style="font-family:'Plus Jakarta Sans',sans-serif" id="merchant-header-name">Merchant Hub</h1>
+  </div>
+  <div class="flex items-center gap-3">
+    <button id="lang-toggle" onclick="I18N.toggle()" class="w-9 h-9 rounded-full bg-orange-50 border border-orange-200 text-primary font-bold text-xs">EN</button>
+    
+    <!-- 头像下拉菜单 -->
+    <div class="relative">
+      <button onclick="toggleProfileMenu()" class="w-9 h-9 rounded-full bg-gradient-to-br from-orange-400 to-amber-600 flex items-center justify-center text-white font-bold shadow-sm hover:shadow-md transition-shadow">
+        <span class="material-symbols-outlined text-xl">person</span>
+      </button>
+      
+      <!-- 下拉菜单 -->
+      <div id="profile-menu" class="hidden absolute right-0 top-12 w-48 bg-white rounded-xl shadow-xl border border-orange-50 py-2 z-50">
+        <div class="px-4 py-3 border-b border-gray-100">
+          <p id="menu-merchant-name" class="font-bold text-sm text-on-surface">商家管理员</p>
+          <p id="menu-store-name" class="text-xs text-secondary mt-0.5">Amber Roast Coffee</p>
+        </div>
+        <a href="store.html" class="flex items-center gap-3 px-4 py-2.5 hover:bg-orange-50 transition-colors text-sm text-on-surface">
+          <span class="material-symbols-outlined text-xl text-primary">storefront</span>
+          <span data-zh="店铺管理" data-en="Store Settings">店铺管理</span>
+        </a>
+        <a href="account.html" class="flex items-center gap-3 px-4 py-2.5 hover:bg-orange-50 transition-colors text-sm text-on-surface">
+          <span class="material-symbols-outlined text-xl text-secondary">settings</span>
+          <span data-zh="账号设置" data-en="Account Settings">账号设置</span>
+        </a>
+        <div class="border-t border-gray-100 mt-1 pt-1">
+          <a href="login.html" onclick="sessionStorage.clear();localStorage.removeItem('merchant_id')" class="flex items-center gap-3 px-4 py-2.5 hover:bg-red-50 transition-colors text-sm text-red-600">
+            <span class="material-symbols-outlined text-xl">logout</span>
+            <span data-zh="退出登录" data-en="Sign Out">退出登录</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="flex min-h-[calc(100dvh-64px)]">
+  <aside id="merchant-aside" class="hidden md:flex flex-col w-60 bg-white border-r border-orange-50 p-4 fixed left-0 top-16 bottom-0 overflow-y-auto"></aside>
+
+  <div id="drawer" class="hidden fixed inset-0 z-40 md:hidden">
+    <div class="absolute inset-0 bg-black/30" onclick="document.getElementById('drawer').classList.add('hidden')"></div>
+    <aside class="absolute left-0 top-0 bottom-0 w-64 bg-white p-4 shadow-xl" id="merchant-aside-mobile"></aside>
+  </div>
+
+  <main class="flex-1 md:ml-60 pb-28 md:pb-8 p-4">
+    <div class="max-w-5xl mx-auto">
+      <!-- 标题 -->
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+        <div>
+          <h2 class="text-3xl font-black text-on-surface" style="font-family:'Plus Jakarta Sans',sans-serif" data-zh="商品管理" data-en="Products">商品管理</h2>
+          <p class="text-secondary text-sm mt-1" data-zh="管理库存、价格和上架状态" data-en="Manage inventory, pricing and status">管理库存、价格和上架状态</p>
+        </div>
+        <button onclick="openProductModal()"
+          class="hidden md:flex items-center gap-2 bg-primary-container text-white px-5 py-3 rounded-xl font-bold text-sm shadow-md shadow-orange-200 active:scale-95 transition-transform">
+          <span class="material-symbols-outlined text-xl">add</span>
+          <span data-zh="添加商品" data-en="Add Product">添加商品</span>
+        </button>
+      </div>
+
+      <!-- 统计 -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+        <div class="bg-white p-4 rounded-xl shadow-[0_2px_12px_rgba(0,0,0,0.05)]">
+          <p class="text-xs text-secondary uppercase font-bold" data-zh="总商品" data-en="Total">总商品</p>
+          <p id="stat-total" class="text-2xl font-black text-on-surface mt-1" style="font-family:'Plus Jakarta Sans',sans-serif">0</p>
+        </div>
+        <div class="bg-white p-4 rounded-xl shadow-[0_2px_12px_rgba(0,0,0,0.05)]">
+          <p class="text-xs text-secondary uppercase font-bold" data-zh="出售中" data-en="On Sale">出售中</p>
+          <p id="stat-onsale" class="text-2xl font-black text-primary mt-1" style="font-family:'Plus Jakarta Sans',sans-serif">0</p>
+        </div>
+        <div class="bg-white p-4 rounded-xl shadow-[0_2px_12px_rgba(0,0,0,0.05)]">
+          <p class="text-xs text-secondary uppercase font-bold" data-zh="库存预警" data-en="Low Stock">库存预警</p>
+          <p id="stat-low" class="text-2xl font-black text-red-500 mt-1" style="font-family:'Plus Jakarta Sans',sans-serif">0</p>
+        </div>
+        <div class="bg-white p-4 rounded-xl shadow-[0_2px_12px_rgba(0,0,0,0.05)]">
+          <p class="text-xs text-secondary uppercase font-bold" data-zh="已下架" data-en="Hidden">已下架</p>
+          <p id="stat-hidden" class="text-2xl font-black text-secondary mt-1" style="font-family:'Plus Jakarta Sans',sans-serif">0</p>
+        </div>
+      </div>
+
+      <!-- 搜索 -->
+      <div class="flex gap-3 mb-4">
+        <div class="relative flex-1">
+          <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-secondary text-xl">search</span>
+          <input id="search-input" type="text" oninput="renderProducts()"
+            class="w-full bg-white border border-orange-100 rounded-xl py-3 pl-10 pr-4 text-sm focus:ring-2 focus:ring-orange-300 transition-all shadow-sm"
+            data-ph-zh="搜索商品名称、SKU..." data-ph-en="Search products..." placeholder="搜索商品名称、SKU..."/>
+        </div>
+      </div>
+
+      <!-- 商品列表 -->
+      <div id="product-list" class="flex flex-col gap-3"></div>
+    </div>
+  </main>
+</div>
+
+<!-- 移动端 FAB -->
+<button onclick="openProductModal()" class="md:hidden fixed bottom-20 right-4 w-14 h-14 bg-primary-container text-white rounded-full shadow-xl flex items-center justify-center z-40 active:scale-95 transition-transform">
+  <span class="material-symbols-outlined text-3xl">add</span>
+</button>
+
+<nav class="md:hidden fixed bottom-0 left-0 w-full flex justify-around items-center px-2 py-2 bg-white/95 backdrop-blur border-t border-orange-50 shadow-lg z-50" id="merchant-bottom-nav"></nav>
+
+<!-- 商品编辑弹窗 -->
+<div id="product-modal" class="hidden fixed inset-0 z-50 bg-black/40 flex items-end md:items-center justify-center p-0 md:p-4">
+  <div class="bg-white w-full md:max-w-lg rounded-t-3xl md:rounded-2xl p-6 max-h-[90dvh] overflow-y-auto">
+    <div class="flex justify-between items-center mb-5">
+      <h3 id="modal-title" class="font-black text-lg text-on-surface" style="font-family:'Plus Jakarta Sans',sans-serif" data-zh="添加商品" data-en="Add Product">添加商品</h3>
+      <button onclick="closeProductModal()" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
+        <span class="material-symbols-outlined text-secondary text-xl">close</span>
+      </button>
+    </div>
+    <form id="product-form" class="space-y-4" onsubmit="saveProduct(event)">
+      <input type="hidden" id="edit-id"/>
+      <div>
+        <label class="text-xs font-semibold text-secondary mb-1 block" data-zh="商品名称" data-en="Product Name">商品名称</label>
+        <input id="f-name" type="text" required class="w-full bg-gray-50 border-none rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-orange-300" data-ph-zh="商品名称" data-ph-en="Product name" placeholder="商品名称"/>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="text-xs font-semibold text-secondary mb-1 block" data-zh="售价 (¥)" data-en="Price (¥)">售价 (¥)</label>
+          <input id="f-price" type="number" step="0.01" required class="w-full bg-gray-50 border-none rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-orange-300" placeholder="0.00"/>
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-secondary mb-1 block" data-zh="库存" data-en="Stock">库存</label>
+          <input id="f-stock" type="number" required class="w-full bg-gray-50 border-none rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-orange-300" placeholder="0"/>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="text-xs font-semibold text-secondary mb-1 block" data-zh="购买获积分" data-en="Points Reward">购买获积分</label>
+          <input id="f-points-reward" type="number" class="w-full bg-gray-50 border-none rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-orange-300" placeholder="0"/>
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-secondary mb-1 block" data-zh="可抵扣积分" data-en="Points Redeem">可抵扣积分</label>
+          <input id="f-points-redeem" type="number" class="w-full bg-gray-50 border-none rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-orange-300" placeholder="0"/>
+        </div>
+      </div>
+      <div>
+        <label class="text-xs font-semibold text-secondary mb-1 block" data-zh="SKU" data-en="SKU">SKU</label>
+        <input id="f-sku" type="text" class="w-full bg-gray-50 border-none rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-orange-300" placeholder="SKU-001"/>
+      </div>
+      <div>
+        <label class="text-xs font-semibold text-secondary mb-1 block" data-zh="状态" data-en="Status">状态</label>
+        <select id="f-status" class="w-full bg-gray-50 border-none rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-orange-300">
+          <option value="on_sale" data-zh="出售中" data-en="On Sale">出售中</option>
+          <option value="hidden" data-zh="已下架" data-en="Hidden">已下架</option>
+          <option value="sold_out" data-zh="已售罄" data-en="Sold Out">已售罄</option>
+        </select>
+      </div>
+      <button type="submit" class="w-full bg-primary-container text-white font-bold py-4 rounded-xl shadow-md shadow-orange-200 active:scale-[.98] transition-transform">
+        <span data-zh="保存" data-en="Save">保存</span>
+      </button>
+    </form>
+  </div>
+</div>
+
+<script src="../db.js"></script>
+<script src="_nav.js"></script>
+<script>
+  DB.init();
+  checkMerchantAuth();
+  I18N.applyAll();
+  renderMerchantNav('products');
+
+  const STATUS_LABELS = {
+    on_sale:  { zh:'出售中', en:'On Sale',  cls:'bg-green-50 text-green-700' },
+    hidden:   { zh:'已下架', en:'Hidden',   cls:'bg-gray-100 text-secondary' },
+    sold_out: { zh:'已售罄', en:'Sold Out', cls:'bg-red-50 text-red-500' },
+  };
+
+  function renderProducts() {
+    const m = DB.getCurrentMerchant();
+    const q = document.getElementById('search-input').value.toLowerCase();
+    let products = DB.findWhere('products', r => r.merchant_id === m.id);
+    if (q) products = products.filter(p => p.name_zh.toLowerCase().includes(q) || (p.sku||'').toLowerCase().includes(q));
+
+    document.getElementById('stat-total').textContent = products.length;
+    document.getElementById('stat-onsale').textContent = products.filter(p => p.status === 'on_sale').length;
+    document.getElementById('stat-low').textContent = products.filter(p => p.stock <= 5).length;
+    document.getElementById('stat-hidden').textContent = products.filter(p => p.status === 'hidden').length;
+
+    const list = document.getElementById('product-list');
+    if (!products.length) {
+      list.innerHTML = `<div class="text-center py-16 text-secondary text-sm">${I18N.t('暂无商品','No products')}</div>`;
+      return;
+    }
+
+    list.innerHTML = products.map(p => {
+      const st = STATUS_LABELS[p.status] || STATUS_LABELS.hidden;
+      const isLowStock = p.stock <= 5;
+      return `
+      <div class="bg-white rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.05)] p-4 flex flex-col md:flex-row items-center gap-4 border ${isLowStock?'border-l-4 border-l-red-400 border-orange-50':'border-orange-50'} hover:shadow-md transition-shadow">
+        <img src="${p.image||'https://via.placeholder.com/96'}" class="w-20 h-20 rounded-xl object-cover flex-shrink-0"/>
+        <div class="flex-1 text-center md:text-left">
+          <div class="flex flex-wrap items-center justify-center md:justify-start gap-2 mb-1">
+            <span class="px-2 py-0.5 rounded-full text-xs font-bold ${st.cls}">${I18N.t(st.zh, st.en)}</span>
+            ${isLowStock ? `<span class="px-2 py-0.5 rounded-full text-xs font-bold bg-red-50 text-red-500">${I18N.t('库存预警','Low Stock')}</span>` : ''}
+            ${p.sku ? `<span class="text-xs text-secondary">SKU: ${p.sku}</span>` : ''}
+          </div>
+          <p class="font-bold text-on-surface">${p.name_zh}</p>
+          <div class="flex flex-wrap justify-center md:justify-start gap-4 mt-2 text-sm">
+            <span class="${isLowStock?'text-red-500 font-bold':'text-secondary'}">${I18N.t('库存:','Stock:')} ${p.stock}</span>
+            <span class="text-primary font-bold">${I18N.t('售价:','Price:')} ¥${p.price}</span>
+            <span class="text-amber-600 text-xs">${I18N.t('积分:','Points:')} +${p.points_reward||0}</span>
+          </div>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="openProductModal(${p.id})"
+            class="flex items-center gap-1.5 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-on-surface font-bold rounded-xl text-sm transition-colors">
+            <span class="material-symbols-outlined text-base">edit</span>
+            <span data-zh="编辑" data-en="Edit">编辑</span>
+          </button>
+          <button onclick="deleteProduct(${p.id})"
+            class="p-2 text-red-400 hover:bg-red-50 rounded-xl transition-colors">
+            <span class="material-symbols-outlined text-xl">delete</span>
+          </button>
+        </div>
+      </div>`;
+    }).join('');
+    I18N.applyAll();
+  }
+
+  function openProductModal(id) {
+    const modal = document.getElementById('product-modal');
+    const title = document.getElementById('modal-title');
+    document.getElementById('edit-id').value = id || '';
+    if (id) {
+      const p = DB.findById('products', id);
+      title.dataset.zh = '编辑商品'; title.dataset.en = 'Edit Product';
+      document.getElementById('f-name').value = p.name_zh;
+      document.getElementById('f-price').value = p.price;
+      document.getElementById('f-stock').value = p.stock;
+      document.getElementById('f-points-reward').value = p.points_reward || 0;
+      document.getElementById('f-points-redeem').value = p.points_redeem || 0;
+      document.getElementById('f-sku').value = p.sku || '';
+      document.getElementById('f-status').value = p.status;
+    } else {
+      title.dataset.zh = '添加商品'; title.dataset.en = 'Add Product';
+      document.getElementById('product-form').reset();
+    }
+    I18N.applyAll();
+    modal.classList.remove('hidden');
+  }
+
+  function closeProductModal() {
+    document.getElementById('product-modal').classList.add('hidden');
+  }
+
+  function saveProduct(e) {
+    e.preventDefault();
+    const m = DB.getCurrentMerchant();
+    const id = parseInt(document.getElementById('edit-id').value);
+    const data = {
+      merchant_id: m.id,
+      name_zh: document.getElementById('f-name').value,
+      price: parseFloat(document.getElementById('f-price').value),
+      stock: parseInt(document.getElementById('f-stock').value),
+      points_reward: parseInt(document.getElementById('f-points-reward').value) || 0,
+      points_redeem: parseInt(document.getElementById('f-points-redeem').value) || 0,
+      sku: document.getElementById('f-sku').value,
+      status: document.getElementById('f-status').value,
+    };
+    if (id) DB.update('products', id, data);
+    else DB.insert('products', data);
+    closeProductModal();
+    renderProducts();
+  }
+
+  function deleteProduct(id) {
+    if (!confirm(I18N.t('确认删除此商品?','Delete this product?'))) return;
+    DB.remove('products', id);
+    renderProducts();
+  }
+
+  renderProducts();
+
+  function toggleProfileMenu() {
+    const menu = document.getElementById('profile-menu');
+    menu.classList.toggle('hidden');
+  }
+
+  // 点击其他地方关闭菜单
+  document.addEventListener('click', function(e) {
+    const menu = document.getElementById('profile-menu');
+    const button = e.target.closest('button[onclick="toggleProfileMenu()"]');
+    if (!button && !menu.contains(e.target)) {
+      menu.classList.add('hidden');
+    }
+  });
+
+  // 更新菜单中的商家信息
+  const m = DB.getCurrentMerchant();
+  if (m) {
+    document.getElementById('menu-merchant-name').textContent = m.name;
+    document.getElementById('menu-store-name').textContent = m.store_name;
+  }
+</script>
+</body>
+</html>

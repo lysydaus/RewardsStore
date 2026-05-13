@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>商铺管理 - Admin</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script>tailwind.config={theme:{extend:{colors:{"primary":"#3b82f6","primary-container":"#4f46e5","surface":"#f9f9f9","on-surface":"#1a1c1c","secondary":"#5f5e5e"}}}}</script>
+<style>
+  body{font-family:'Work Sans',sans-serif;background:#f9f9f9;min-height:100dvh;}
+  .material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;}
+</style>
+</head>
+<body class="bg-surface text-on-surface pb-24">
+
+<header class="sticky top-0 z-50 bg-white shadow-sm flex justify-between items-center px-4 h-16">
+  <h1 class="font-black text-primary-container text-lg" style="font-family:'Plus Jakarta Sans',sans-serif">商铺管理</h1>
+  <button onclick="logout()" class="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center">
+    <span class="material-symbols-outlined text-secondary text-xl">logout</span>
+  </button>
+</header>
+
+<main class="p-4 space-y-4">
+  <!-- 统计 -->
+  <div class="grid grid-cols-4 gap-3">
+    <div class="bg-white p-4 rounded-xl shadow-sm">
+      <p class="text-xs text-secondary">总商铺</p>
+      <p id="stat-total" class="text-2xl font-black text-primary mt-1">0</p>
+    </div>
+    <div class="bg-white p-4 rounded-xl shadow-sm">
+      <p class="text-xs text-secondary">咖啡</p>
+      <p id="stat-coffee" class="text-xl font-black text-amber-600 mt-1">0</p>
+    </div>
+    <div class="bg-white p-4 rounded-xl shadow-sm">
+      <p class="text-xs text-secondary">烘焙</p>
+      <p id="stat-bakery" class="text-xl font-black text-orange-600 mt-1">0</p>
+    </div>
+    <div class="bg-white p-4 rounded-xl shadow-sm">
+      <p class="text-xs text-secondary">超市</p>
+      <p id="stat-market" class="text-xl font-black text-green-600 mt-1">0</p>
+    </div>
+  </div>
+
+  <!-- 商铺表格 -->
+  <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-gray-50">
+          <tr class="border-b">
+            <th class="px-4 py-3 text-left text-xs font-bold text-secondary">ID</th>
+            <th class="px-4 py-3 text-left text-xs font-bold text-secondary">店铺名称</th>
+            <th class="px-4 py-3 text-left text-xs font-bold text-secondary">分类</th>
+            <th class="px-4 py-3 text-left text-xs font-bold text-secondary">地址</th>
+            <th class="px-4 py-3 text-left text-xs font-bold text-secondary">评分</th>
+            <th class="px-4 py-3 text-left text-xs font-bold text-secondary">评论数</th>
+            <th class="px-4 py-3 text-left text-xs font-bold text-secondary">营业时间</th>
+            <th class="px-4 py-3 text-left text-xs font-bold text-secondary">商家账号</th>
+            <th class="px-4 py-3 text-left text-xs font-bold text-secondary">密码</th>
+          </tr>
+        </thead>
+        <tbody id="stores-tbody" class="divide-y"></tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-2 py-2 bg-white border-t shadow-lg z-50" id="admin-bottom-nav"></nav>
+
+<script src="../db.js"></script>
+<script src="_nav.js"></script>
+<script>
+  DB.init();
+  checkAdminAuth();
+  renderAdminNav('stores');
+
+  const CATEGORY_LABELS = {
+    Coffee: '咖啡茶饮',
+    Bakery: '烘焙',
+    Supermarket: '超市',
+    Electronics: '数码',
+    Fashion: '时尚',
+    Beauty: '美容'
+  };
+
+  function renderStores() {
+    const stores = DB.findAll('stores');
+    const merchants = DB.findAll('merchants');
+
+    // 统计
+    document.getElementById('stat-total').textContent = stores.length;
+    document.getElementById('stat-coffee').textContent = stores.filter(s => s.category === 'Coffee').length;
+    document.getElementById('stat-bakery').textContent = stores.filter(s => s.category === 'Bakery').length;
+    document.getElementById('stat-market').textContent = stores.filter(s => s.category === 'Supermarket').length;
+
+    const tbody = document.getElementById('stores-tbody');
+    if (!stores.length) {
+      tbody.innerHTML = '<tr><td colspan="9" class="text-center py-10 text-secondary">暂无商铺</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = stores.map(s => {
+      const merchant = merchants.find(m => m.store_id === s.id);
+      const merchantPhone = merchant ? merchant.phone : '-';
+      const merchantPassword = merchant ? merchant.password : '-';
+      
+      return `
+      <tr class="hover:bg-gray-50">
+        <td class="px-4 py-3 font-mono text-xs">${s.id}</td>
+        <td class="px-4 py-3 font-semibold">${s.name_zh || s.name}</td>
+        <td class="px-4 py-3">
+          <span class="px-2 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-700">
+            ${CATEGORY_LABELS[s.category] || s.category}
+          </span>
+        </td>
+        <td class="px-4 py-3 text-xs">${s.address || '-'}</td>
+        <td class="px-4 py-3">
+          <div class="flex items-center gap-1">
+            <span class="material-symbols-outlined text-amber-500 text-sm" style="font-variation-settings:'FILL' 1">star</span>
+            <span class="font-bold">${s.rating || 0}</span>
+          </div>
+        </td>
+        <td class="px-4 py-3 text-secondary">${s.review_count || 0}</td>
+        <td class="px-4 py-3 text-xs text-secondary">${s.open_hours || s.hours || '-'}</td>
+        <td class="px-4 py-3 font-mono text-xs text-blue-600">${merchantPhone}</td>
+        <td class="px-4 py-3 font-mono text-xs text-blue-600">${merchantPassword}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  renderStores();
+</script>
+</body>
+</html>

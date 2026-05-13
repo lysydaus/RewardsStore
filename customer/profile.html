@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>我的 - 振华商城</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script>tailwind.config={theme:{extend:{colors:{"primary":"#a04100","primary-container":"#ff6b00","on-primary":"#ffffff","on-primary-container":"#572000","surface":"#f9f9f9","on-surface":"#1a1c1c","secondary":"#5f5e5e","on-surface-variant":"#5a4136","surface-container-low":"#f3f3f3","surface-container-lowest":"#ffffff","outline-variant":"#e2bfb0","tertiary":"#8c5000","error":"#ba1a1a"}}}}</script>
+<style>
+  body{font-family:'Work Sans',sans-serif;background:#f9f9f9;min-height:100dvh;}
+  .material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;}
+</style>
+</head>
+<body class="bg-surface text-on-surface pb-24">
+
+<header class="sticky top-0 z-50 bg-white/95 backdrop-blur shadow-[0_2px_12px_rgba(0,0,0,0.06)] flex justify-between items-center px-4 py-3">
+  <button onclick="toggleMenu()" class="p-1"><span class="material-symbols-outlined text-primary">menu</span></button>
+  <h1 class="font-black text-primary text-xl" style="font-family:'Plus Jakarta Sans',sans-serif" data-zh="振华商城" data-en="Vibrant Store">振华商城</h1>
+  <div class="flex items-center gap-2">
+    <button onclick="showNotifications()" class="relative p-1">
+      <span class="material-symbols-outlined text-primary">notifications</span>
+      <span id="notification-badge" class="hidden absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">0</span>
+    </button>
+    <button id="lang-toggle" onclick="I18N.toggle()" class="w-8 h-8 rounded-full bg-orange-50 border border-orange-200 text-primary font-bold text-xs">EN</button>
+  </div>
+</header>
+
+<!-- 下拉菜单 -->
+<div id="dropdown-menu" class="hidden fixed top-14 left-4 z-50 bg-white rounded-xl shadow-lg border border-orange-50 overflow-hidden min-w-[160px]">
+  <a href="home.html" class="w-full flex items-center gap-3 px-4 py-3 hover:bg-orange-50 transition-colors">
+    <span class="material-symbols-outlined text-primary">home</span>
+    <span class="text-on-surface font-medium text-sm" data-zh="返回首页" data-en="Home">返回首页</span>
+  </a>
+  <a href="addresses.html" class="w-full flex items-center gap-3 px-4 py-3 hover:bg-orange-50 transition-colors">
+    <span class="material-symbols-outlined text-primary">location_on</span>
+    <span class="text-on-surface font-medium text-sm" data-zh="收货地址" data-en="Addresses">收货地址</span>
+  </a>
+  <a href="payments.html" class="w-full flex items-center gap-3 px-4 py-3 hover:bg-orange-50 transition-colors">
+    <span class="material-symbols-outlined text-primary">credit_card</span>
+    <span class="text-on-surface font-medium text-sm" data-zh="支付方式" data-en="Payments">支付方式</span>
+  </a>
+</div>
+
+<main class="px-4 pt-4 space-y-4">
+
+  <!-- 用户信息 -->
+  <div id="user-section" class="bg-white rounded-2xl p-5 shadow-sm border border-orange-50 flex items-center gap-4">
+    <div class="relative">
+      <div class="w-16 h-16 rounded-full bg-orange-100 flex items-center justify-center">
+        <span class="material-symbols-outlined text-primary-container text-3xl" style="font-variation-settings:'FILL' 1,'wght' 500">person</span>
+      </div>
+      <div id="member-badge" class="hidden absolute bottom-0 right-0 bg-primary-container p-0.5 rounded-full border-2 border-white">
+        <span class="material-symbols-outlined text-white text-xs" style="font-variation-settings:'FILL' 1,'wght' 500">verified</span>
+      </div>
+      <div id="trial-badge" class="hidden absolute bottom-0 right-0 bg-blue-500 p-0.5 rounded-full border-2 border-white">
+        <span class="material-symbols-outlined text-white text-xs" style="font-variation-settings:'FILL' 1,'wght' 500">card_giftcard</span>
+      </div>
+    </div>
+    <div class="flex-1">
+      <p id="user-name" class="font-bold text-on-surface text-lg">-</p>
+      <p id="user-level" class="text-xs text-secondary flex items-center gap-1 mt-0.5">
+        <span class="material-symbols-outlined text-sm">stars</span>
+        <span>-</span>
+      </p>
+      <p id="member-status" class="hidden text-xs font-semibold mt-1"></p>
+    </div>
+    <button onclick="showLogin()" id="login-btn" class="hidden px-4 py-2 bg-primary-container text-white rounded-xl font-bold text-sm">
+      <span data-zh="登录" data-en="Login">登录</span>
+    </button>
+  </div>
+
+  <!-- 会员卡片 -->
+  <a href="membership.html" id="membership-card" class="block bg-gradient-to-br from-orange-500 to-amber-600 rounded-2xl p-5 shadow-lg text-white">
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="text-white/80 text-xs font-semibold">会员中心</p>
+        <p id="membership-title" class="font-black text-xl mt-1">开通会员</p>
+        <p id="membership-desc" class="text-white/90 text-sm mt-1">享受专属价格和特权</p>
+      </div>
+      <span class="material-symbols-outlined text-white/30 text-5xl">chevron_right</span>
+    </div>
+  </a>
+
+  <!-- 积分卡片 -->
+  <div class="bg-gradient-to-r from-amber-400 to-orange-500 rounded-2xl p-5 shadow-lg shadow-orange-200 text-white">
+    <div class="flex justify-between items-start">
+      <div>
+        <p class="text-white/80 text-xs font-semibold" data-zh="我的积分" data-en="My Points">我的积分</p>
+        <p id="points-display" class="font-black text-4xl mt-1" style="font-family:'Plus Jakarta Sans',sans-serif">0</p>
+        <p class="text-white/70 text-xs mt-1" data-zh="1积分 = ¥0.01" data-en="1 pt = ¥0.01">1积分 = ¥0.01</p>
+      </div>
+      <div class="text-right">
+        <span class="material-symbols-outlined text-white/30 text-6xl" style="font-variation-settings:'FILL' 1,'wght' 500">stars</span>
+      </div>
+    </div>
+    <div class="flex gap-3 mt-4">
+      <button onclick="showPointsLog()" class="flex-1 bg-white/20 hover:bg-white/30 text-white text-xs font-bold py-2 rounded-xl transition-colors">
+        <span data-zh="积分明细" data-en="Points History">积分明细</span>
+      </button>
+      <a href="categories.html" class="flex-1 bg-white text-orange-500 text-xs font-bold py-2 rounded-xl text-center">
+        <span data-zh="去赚积分" data-en="Earn Points">去赚积分</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- 我的核销码 -->
+  <section>
+    <div class="flex justify-between items-center mb-3">
+      <h2 class="font-bold text-on-surface" data-zh="我的核销码" data-en="My Coupons">我的核销码</h2>
+      <button onclick="showAllCoupons()" class="text-xs font-bold text-primary flex items-center gap-0.5">
+        <span data-zh="查看全部" data-en="View All">查看全部</span>
+        <span class="material-symbols-outlined text-sm">chevron_right</span>
+      </button>
+    </div>
+    <div id="coupon-list" class="space-y-3"></div>
+  </section>
+
+  <!-- 我的订单 -->
+  <section>
+    <div class="flex justify-between items-center mb-3">
+      <h2 class="font-bold text-on-surface" data-zh="我的订单" data-en="My Orders">我的订单</h2>
+    </div>
+    <div class="grid grid-cols-4 gap-3">
+      <button onclick="showOrders('pending_payment')" class="flex flex-col items-center gap-1.5 bg-white p-3 rounded-2xl shadow-sm border border-orange-50 active:scale-95 transition-transform">
+        <div class="w-10 h-10 bg-orange-50 rounded-full flex items-center justify-center">
+          <span class="material-symbols-outlined text-primary-container text-xl">payments</span>
+        </div>
+        <span class="text-xs font-semibold text-on-surface" data-zh="待付款" data-en="Unpaid">待付款</span>
+      </button>
+      <button onclick="showOrders('pending_ship')" class="flex flex-col items-center gap-1.5 bg-white p-3 rounded-2xl shadow-sm border border-orange-50 active:scale-95 transition-transform">
+        <div class="w-10 h-10 bg-orange-50 rounded-full flex items-center justify-center">
+          <span class="material-symbols-outlined text-primary-container text-xl">package_2</span>
+        </div>
+        <span class="text-xs font-semibold text-on-surface" data-zh="待发货" data-en="To Ship">待发货</span>
+      </button>
+      <button onclick="showOrders('shipped')" class="flex flex-col items-center gap-1.5 bg-white p-3 rounded-2xl shadow-sm border border-orange-50 active:scale-95 transition-transform relative">
+        <div class="w-10 h-10 bg-orange-50 rounded-full flex items-center justify-center">
+          <span class="material-symbols-outlined text-primary-container text-xl">local_shipping</span>
+        </div>
+        <span class="text-xs font-semibold text-on-surface" data-zh="运输中" data-en="Shipping">运输中</span>
+      </button>
+      <button onclick="showOrders('completed')" class="flex flex-col items-center gap-1.5 bg-white p-3 rounded-2xl shadow-sm border border-orange-50 active:scale-95 transition-transform">
+        <div class="w-10 h-10 bg-orange-50 rounded-full flex items-center justify-center">
+          <span class="material-symbols-outlined text-primary-container text-xl">rate_review</span>
+        </div>
+        <span class="text-xs font-semibold text-on-surface" data-zh="已完成" data-en="Done">已完成</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- 服务入口 -->
+  <section class="pb-4">
+    <h2 class="font-bold text-on-surface mb-3" data-zh="服务" data-en="Services">服务</h2>
+    <div id="services-grid" class="grid grid-cols-3 gap-3"></div>
+  </section>
+</main>
+
+<!-- 积分明细弹窗 -->
+<div id="points-modal" class="hidden fixed inset-0 z-50 bg-black/40 flex items-end justify-center">
+  <div class="bg-white w-full rounded-t-3xl p-5 max-h-[70dvh] overflow-y-auto">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="font-black text-lg text-on-surface" style="font-family:'Plus Jakarta Sans',sans-serif" data-zh="积分明细" data-en="Points History">积分明细</h3>
+      <button onclick="document.getElementById('points-modal').classList.add('hidden')" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
+        <span class="material-symbols-outlined text-secondary text-xl">close</span>
+      </button>
+    </div>
+    <div id="points-log-list" class="space-y-3"></div>
+  </div>
+</div>
+
+<!-- 订单列表弹窗 -->
+<div id="orders-modal" class="hidden fixed inset-0 z-50 bg-black/40 flex items-end justify-center">
+  <div class="bg-white w-full rounded-t-3xl p-5 max-h-[80dvh] overflow-y-auto">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="font-black text-lg text-on-surface" style="font-family:'Plus Jakarta Sans',sans-serif" data-zh="我的订单" data-en="My Orders">我的订单</h3>
+      <button onclick="document.getElementById('orders-modal').classList.add('hidden')" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
+        <span class="material-symbols-outlined text-secondary text-xl">close</span>
+      </button>
+    </div>
+    <div id="orders-list" class="space-y-3"></div>
+  </div>
+</div>
+
+<!-- 消息通知弹窗 -->
+<div id="notifications-modal" class="hidden fixed inset-0 z-50 bg-black/40 flex items-end justify-center">
+  <div class="bg-white w-full rounded-t-3xl p-5 max-h-[80dvh] overflow-y-auto">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="font-black text-lg text-on-surface" style="font-family:'Plus Jakarta Sans',sans-serif">消息通知</h3>
+      <div class="flex items-center gap-2">
+        <button onclick="markAllAsRead()" class="text-xs text-primary-container font-semibold">全部已读</button>
+        <button onclick="document.getElementById('notifications-modal').classList.add('hidden')" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
+          <span class="material-symbols-outlined text-secondary text-xl">close</span>
+        </button>
+      </div>
+    </div>
+    <div id="notifications-list" class="space-y-3"></div>
+  </div>
+</div>
+
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-2 py-2 bg-white/95 backdrop-blur border-t border-orange-50 shadow-lg z-50" id="customer-bottom-nav"></nav>
+
+<script src="../db.js"></script>
+<script src="_nav.js"></script>
+<script src="_message_banner.js"></script>
+<script>
+  DB.init();
+  I18N.applyAll();
+  
+  // 检查登录状态
+  let user = DB.getCurrentUser();
+  
+  renderCustomerNav('profile');
+  
+  // 检查并生成准会员到期提醒
+  DB.checkAndCreateTrialReminders(user.id);
+  
+  // 更新消息通知徽章
+  updateNotificationBadge();
+
+  // 渲染用户信息
+  if (!user) {
+    // 如果没有用户，显示未登录状态并延迟跳转
+    document.getElementById('user-name').textContent = '未登录';
+    document.getElementById('user-level').textContent = '请先登录';
+    document.getElementById('points-display').textContent = '0';
+    setTimeout(() => {
+      window.location.href = 'login.html';
+    }, 1000);
+  } else {
+    const LEVEL_MAP = { bronze:{zh:'铜牌会员',en:'Bronze'}, silver:{zh:'银牌会员',en:'Silver'}, gold:{zh:'金牌会员',en:'Gold'}, platinum:{zh:'铂金会员',en:'Platinum'} };
+    
+    document.getElementById('user-name').textContent = user.nickname || user.phone || '用户';
+    const lv = LEVEL_MAP[user.level] || LEVEL_MAP.bronze;
+    document.getElementById('user-level').innerHTML = `<span class="material-symbols-outlined text-sm">stars</span><span>${I18N.t(lv.zh, lv.en)}</span>`;
+    document.getElementById('points-display').textContent = (user.points || 0).toLocaleString();
+    
+    // 显示会员状态
+    const isMember = DB.isMemberActive(user.id);
+    const trialTime = DB.getTrialRemainingTime(user.id);
+    const memberCard = document.getElementById('membership-card');
+    const memberStatus = document.getElementById('member-status');
+    const memberBadge = document.getElementById('member-badge');
+    const trialBadge = document.getElementById('trial-badge');
+    
+    if (user.is_formal_member && user.member_expire_at && new Date(user.member_expire_at) > new Date()) {
+      // 正式会员
+      memberBadge.classList.remove('hidden');
+      memberStatus.classList.remove('hidden');
+      memberStatus.className = 'text-xs font-semibold mt-1 text-orange-600';
+      memberStatus.textContent = '会员用户';
+      
+      document.getElementById('membership-title').textContent = '会员用户';
+      const expireDate = new Date(user.member_expire_at).toLocaleDateString();
+      document.getElementById('membership-desc').textContent = `有效期至 ${expireDate}`;
+    } else if (trialTime && !trialTime.expired) {
+      // 准会员
+      trialBadge.classList.remove('hidden');
+      memberStatus.classList.remove('hidden');
+      memberStatus.className = 'text-xs font-semibold mt-1 text-blue-600';
+      memberStatus.textContent = `7天准会员 · 还剩${trialTime.days}天${trialTime.hours}小时`;
+      
+      document.getElementById('membership-title').textContent = '7天准会员体验中';
+      document.getElementById('membership-desc').textContent = `还剩${trialTime.days}天${trialTime.hours}小时 · 点击转正`;
+      memberCard.classList.remove('from-orange-500', 'to-amber-600');
+      memberCard.classList.add('from-blue-500', 'to-indigo-600');
+    } else {
+      // 非会员
+      document.getElementById('membership-title').textContent = '开通会员';
+      document.getElementById('membership-desc').textContent = '享受专属价格和特权';
+    }
+  }
+
+  // 核销码
+  function renderCoupons(all = false) {
+    let orders = DB.findWhere('orders', r => r.user_id === user.id && r.coupon_code);
+    if (!all) orders = orders.filter(o => o.coupon_used === 0).slice(0, 2);
+    const list = document.getElementById('coupon-list');
+    if (!orders.length) {
+      list.innerHTML = `<p class="text-sm text-secondary text-center py-4">${I18N.t('暂无核销码','No coupons')}</p>`;
+      return;
+    }
+    list.innerHTML = orders.map(o => {
+      const items = DB.findWhere('order_items', r => r.order_id === o.id);
+      const item = items[0];
+      return `
+      <div class="bg-white rounded-2xl p-4 shadow-sm border border-orange-50 flex items-center gap-3">
+        <div class="bg-gray-50 p-2 rounded-xl border border-gray-100">
+          <svg viewBox="0 0 60 60" class="w-14 h-14">
+            <rect x="5" y="5" width="20" height="20" fill="none" stroke="#1a1c1c" stroke-width="3"/>
+            <rect x="10" y="10" width="10" height="10" fill="#1a1c1c"/>
+            <rect x="35" y="5" width="20" height="20" fill="none" stroke="#1a1c1c" stroke-width="3"/>
+            <rect x="40" y="10" width="10" height="10" fill="#1a1c1c"/>
+            <rect x="5" y="35" width="20" height="20" fill="none" stroke="#1a1c1c" stroke-width="3"/>
+            <rect x="10" y="40" width="10" height="10" fill="#1a1c1c"/>
+            <rect x="30" y="30" width="6" height="6" fill="#1a1c1c"/>
+            <rect x="40" y="30" width="6" height="6" fill="#1a1c1c"/>
+            <rect x="50" y="30" width="6" height="6" fill="#1a1c1c"/>
+            <rect x="30" y="40" width="6" height="6" fill="#1a1c1c"/>
+            <rect x="50" y="40" width="6" height="6" fill="#1a1c1c"/>
+            <rect x="30" y="50" width="6" height="6" fill="#1a1c1c"/>
+            <rect x="40" y="50" width="6" height="6" fill="#1a1c1c"/>
+          </svg>
+        </div>
+        <div class="flex-1">
+          <p class="font-bold text-sm text-on-surface">${item ? item.name_zh : I18N.t('订单核销码','Order Coupon')}</p>
+          <p class="text-xs text-secondary mt-0.5 font-mono">${o.coupon_code}</p>
+          <span class="inline-block mt-1 px-2 py-0.5 rounded-full text-xs font-bold ${o.coupon_used ? 'bg-gray-100 text-secondary' : 'bg-amber-50 text-amber-700'}">
+            ${o.coupon_used ? I18N.t('已核销','Used') : I18N.t('待核销','Pending')}
+          </span>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function showAllCoupons() {
+    renderCoupons(true);
+  }
+
+  function showPointsLog() {
+    const logs = DB.findWhere('points_log', r => r.user_id === user.id);
+    logs.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+    const list = document.getElementById('points-log-list');
+    list.innerHTML = logs.map(l => `
+      <div class="flex justify-between items-center py-3 border-b border-gray-50">
+        <div>
+          <p class="text-sm font-semibold text-on-surface">${l.remark || l.type}</p>
+          <p class="text-xs text-secondary">${new Date(l.created_at).toLocaleString()}</p>
+        </div>
+        <div class="text-right">
+          <p class="font-black text-base ${l.points > 0 ? 'text-amber-600' : 'text-secondary'}" style="font-family:'Plus Jakarta Sans',sans-serif">
+            ${l.points > 0 ? '+' : ''}${l.points}
+          </p>
+          <p class="text-xs text-secondary">${I18N.t('余额:','Balance:')} ${l.balance}</p>
+        </div>
+      </div>`).join('') || `<p class="text-center text-secondary text-sm py-6">${I18N.t('暂无记录','No records')}</p>`;
+    document.getElementById('points-modal').classList.remove('hidden');
+  }
+
+  function showOrders(status) {
+    let orders = DB.findWhere('orders', r => r.user_id === user.id);
+    if (status) orders = orders.filter(o => o.status === status);
+    orders.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+
+    const STATUS_MAP = {
+      pending_payment:{zh:'待付款',en:'Pending'}, paid:{zh:'已付款',en:'Paid'},
+      pending_ship:{zh:'待发货',en:'To Ship'}, shipped:{zh:'已发货',en:'Shipped'},
+      completed:{zh:'已完成',en:'Completed'}, refunding:{zh:'退款中',en:'Refunding'},
+      refunded:{zh:'已退款',en:'Refunded'}, cancelled:{zh:'已取消',en:'Cancelled'},
+    };
+
+    const list = document.getElementById('orders-list');
+    list.innerHTML = orders.map(o => {
+      const items = DB.findWhere('order_items', r => r.order_id === o.id);
+      const st = STATUS_MAP[o.status] || {zh:o.status,en:o.status};
+      return `
+      <div class="bg-gray-50 rounded-2xl p-4 border border-orange-50">
+        <div class="flex justify-between items-center mb-2">
+          <span class="text-xs text-secondary font-mono">${o.order_no}</span>
+          <span class="text-xs font-bold text-primary">${I18N.t(st.zh, st.en)}</span>
+        </div>
+        ${items.map(item => `
+        <div class="flex gap-3 items-center">
+          <img src="${item.image||'https://via.placeholder.com/48'}" class="w-12 h-12 rounded-xl object-cover"/>
+          <div class="flex-1">
+            <p class="text-sm font-semibold text-on-surface">${item.name_zh}</p>
+            <p class="text-xs text-secondary">¥${item.price} x${item.quantity}</p>
+          </div>
+        </div>`).join('')}
+        <div class="flex justify-between items-center mt-3 pt-3 border-t border-gray-100">
+          <p class="text-xs text-secondary">${I18N.t('合计:','Total:')} <span class="font-bold text-on-surface">¥${o.total_amount}</span></p>
+          ${o.coupon_code && !o.coupon_used ? `<span class="text-xs bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full font-bold">${I18N.t('待核销','Pending Verify')}</span>` : ''}
+        </div>
+      </div>`;
+    }).join('') || `<p class="text-center text-secondary text-sm py-6">${I18N.t('暂无订单','No orders')}</p>`;
+
+    document.getElementById('orders-modal').classList.remove('hidden');
+  }
+
+  // 服务网格
+  const services = [
+    {icon:'location_on', zh:'收货地址', en:'Addresses', href:'addresses.html'},
+    {icon:'credit_card', zh:'支付方式', en:'Payments', href:'payments.html'},
+    {icon:'mail',        zh:'站内短信', en:'Messages', href:'messages.html'},
+    {icon:'redeem',      zh:'优惠券',   en:'Coupons'},
+    {icon:'help_center', zh:'帮助中心', en:'Help'},
+    {icon:'settings',    zh:'设置',     en:'Settings'},
+    {icon:'support_agent',zh:'客服',   en:'Support'},
+    {icon:'logout',      zh:'退出登录', en:'Logout', action:'logout'},
+  ];
+  document.getElementById('services-grid').innerHTML = services.map(s => {
+    if (s.href) {
+      return `<a href="${s.href}" class="bg-white p-4 rounded-2xl shadow-sm border border-orange-50 flex flex-col items-start gap-2 hover:bg-orange-50 transition-colors active:scale-95">
+        <span class="material-symbols-outlined text-primary-container text-2xl">${s.icon}</span>
+        <span class="text-xs font-bold text-on-surface">${I18N.t(s.zh, s.en)}</span>
+      </a>`;
+    } else {
+      return `<button onclick="${s.action ? s.action+'()' : ''}" class="bg-white p-4 rounded-2xl shadow-sm border border-orange-50 flex flex-col items-start gap-2 hover:bg-orange-50 transition-colors active:scale-95 ${s.action === 'logout' ? 'text-red-600' : ''}">
+        <span class="material-symbols-outlined ${s.action === 'logout' ? 'text-red-500' : 'text-primary-container'} text-2xl">${s.icon}</span>
+        <span class="text-xs font-bold ${s.action === 'logout' ? 'text-red-600' : 'text-on-surface'}">${I18N.t(s.zh, s.en)}</span>
+      </button>`;
+    }
+  }).join('');
+
+  renderCoupons();
+  
+  // 检查URL参数，如果有show=orders则自动显示订单列表
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('show') === 'orders') {
+    showOrders();
+  }
+  
+  // 更新消息通知徽章
+  function updateNotificationBadge() {
+    const count = DB.getUnreadNotificationCount(user.id);
+    const badge = document.getElementById('notification-badge');
+    if (badge) {
+      if (count > 0) {
+        badge.textContent = count > 99 ? '99+' : count;
+        badge.classList.remove('hidden');
+      } else {
+        badge.classList.add('hidden');
+      }
+    }
+  }
+  
+  // 显示消息通知
+  window.showNotifications = function() {
+    const notifications = DB.getNotifications(user.id);
+    const list = document.getElementById('notifications-list');
+    
+    if (!notifications.length) {
+      list.innerHTML = '<p class="text-center text-secondary text-sm py-6">暂无消息</p>';
+    } else {
+      list.innerHTML = notifications.map(n => {
+        const typeIcons = {
+          trial_reminder_3days: 'schedule',
+          trial_reminder_1day: 'notifications_active',
+          trial_reminder_today: 'priority_high',
+          promotion: 'local_offer',
+          system: 'info'
+        };
+        const icon = typeIcons[n.type] || 'notifications';
+        
+        return `
+        <div onclick="readNotification(${n.id})" class="p-4 rounded-xl border ${n.is_read ? 'bg-gray-50 border-gray-100' : 'bg-orange-50 border-orange-200'} cursor-pointer hover:shadow-md transition-shadow">
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-full ${n.is_read ? 'bg-gray-200' : 'bg-primary-container'} flex items-center justify-center flex-shrink-0">
+              <span class="material-symbols-outlined text-white text-xl">${icon}</span>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-start justify-between gap-2 mb-1">
+                <h4 class="font-bold text-sm ${n.is_read ? 'text-secondary' : 'text-on-surface'}">${n.title}</h4>
+                ${!n.is_read ? '<span class="w-2 h-2 bg-red-500 rounded-full flex-shrink-0 mt-1"></span>' : ''}
+              </div>
+              <p class="text-xs ${n.is_read ? 'text-secondary' : 'text-on-surface'} mb-2">${n.content}</p>
+              <p class="text-xs text-secondary">${new Date(n.created_at).toLocaleString()}</p>
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+    
+    document.getElementById('notifications-modal').classList.remove('hidden');
+  };
+  
+  // 标记消息为已读
+  window.readNotification = function(notificationId) {
+    const notification = DB.markNotificationAsRead(notificationId);
+    if (notification && notification.action_url) {
+      window.location.href = notification.action_url;
+    } else {
+      updateNotificationBadge();
+      showNotifications();
+    }
+  };
+  
+  // 全部标记为已读
+  window.markAllAsRead = function() {
+    DB.markAllNotificationsAsRead(user.id);
+    updateNotificationBadge();
+    showNotifications();
+  };
+</script>
+</body>
+</html>
